@@ -12,12 +12,14 @@
   <script src="https://unpkg.com/shpjs@3.4.1/dist/shp.min.js"></script>
 </head>
 <body class="font-sans text-base">
+  <button id="toggleSidebarIzq" class="fixed top-4 left-4 z-60 md:hidden bg-green-600 text-white p-2 rounded">☰</button>
+  <button id="toggleSidebarDer" class="fixed top-4 right-4 z-60 md:hidden bg-green-600 text-white p-2 rounded">⚙️</button>
 
   <div class="flex flex-col md:flex-row h-screen overflow-hidden">
 
     <!-- Sidebar Izquierda -->
     <aside class="w-full md:w-[340px] bg-white border-r border-gray-200 overflow-y-auto p-6 space-y-6 text-[17px]">
-
+     <button id="closeSidebarIzq" class="md:hidden absolute top-4 right-4 text-gray-500">×</button>
       <!-- Logo -->
       <div class="flex items-center gap-4">
         <img src="logo.png" alt="Logo" class="h-12 w-auto" />
@@ -92,6 +94,7 @@
 
     <!-- Sidebar derecho: Filtros -->
     <aside class="w-full md:w-[340px] bg-white border-l border-gray-200 overflow-y-auto p-6 space-y-6 text-[17px]">
+      <button id="closeSidebarIzq" class="md:hidden absolute top-4 right-4 text-gray-500">×</button>
       <h2 class="text-lg font-bold text-green-700">Filtros y Cálculos</h2>
       <form class="space-y-4 text-sm">
         <div>
@@ -300,6 +303,24 @@
 
 <script>
 window.addEventListener('DOMContentLoaded', () => {
+  // Toggles para sidebars en móvil
+  const sidebarIzq = document.getElementById('sidebarIzq');
+  const sidebarDer = document.getElementById('sidebarDer');
+
+  document.getElementById('toggleSidebarIzq').addEventListener('click', () => {
+    sidebarIzq.classList.toggle('-translate-x-full');
+  });
+  document.getElementById('closeSidebarIzq').addEventListener('click', () => {
+    sidebarIzq.classList.add('-translate-x-full');
+  });
+
+  document.getElementById('toggleSidebarDer').addEventListener('click', () => {
+    sidebarDer.classList.toggle('translate-x-full');
+  });
+  document.getElementById('closeSidebarDer').addEventListener('click', () => {
+    sidebarDer.classList.add('translate-x-full');
+  });
+
   // ————— Inicializar el mapa —————
   const map = L.map('map').setView([4.711, -74.072], 6);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
