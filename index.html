@@ -19,7 +19,7 @@
 
     <!-- Sidebar Izquierda -->
     <aside class="w-full md:w-[340px] bg-white border-r border-gray-200 overflow-y-auto p-6 space-y-6 text-[17px]">
-     <button id="closeSidebarIzq" class="md:hidden absolute top-4 right-4 text-gray-500">×</button>
+     
       <!-- Logo -->
       <div class="flex items-center gap-4">
         <img src="logo.png" alt="Logo" class="h-12 w-auto" />
@@ -303,24 +303,6 @@
 
 <script>
 window.addEventListener('DOMContentLoaded', () => {
-  // Toggles para sidebars en móvil
-  const sidebarIzq = document.getElementById('sidebarIzq');
-  const sidebarDer = document.getElementById('sidebarDer');
-
-  document.getElementById('toggleSidebarIzq').addEventListener('click', () => {
-    sidebarIzq.classList.toggle('-translate-x-full');
-  });
-  document.getElementById('closeSidebarIzq').addEventListener('click', () => {
-    sidebarIzq.classList.add('-translate-x-full');
-  });
-
-  document.getElementById('toggleSidebarDer').addEventListener('click', () => {
-    sidebarDer.classList.toggle('translate-x-full');
-  });
-  document.getElementById('closeSidebarDer').addEventListener('click', () => {
-    sidebarDer.classList.add('translate-x-full');
-  });
-
   // ————— Inicializar el mapa —————
   const map = L.map('map').setView([4.711, -74.072], 6);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
