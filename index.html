@@ -13,10 +13,10 @@
 </head>
 <body class="font-sans text-base">
 
-  <div class="flex h-screen overflow-hidden">
+  <div class="flex flex-col md:flex-row h-screen overflow-hidden">
 
     <!-- Sidebar Izquierda -->
-    <aside class="w-[340px] bg-white border-r border-gray-200 overflow-y-auto p-6 space-y-6 text-[17px]">
+    <aside class="w-full md:w-[340px] bg-white border-r border-gray-200 overflow-y-auto p-6 space-y-6 text-[17px]">
 
       <!-- Logo -->
       <div class="flex items-center gap-4">
@@ -83,12 +83,15 @@
 
     <!-- Mapa central -->
     <div class="flex-1 relative">
-      <div id="map" class="absolute inset-0 z-0"></div>
-      <button id="abrirFormulario" class="absolute top-6 right-[350px] z-50 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 shadow-lg text-lg">Agregar Inmuebles</button>
+      <div id="map" class="absolute inset-0 h-64 md:h-full z-0"></div>
+      <button id="abrirFormulario"
+              class="absolute top-4 right-4 md:right-[350px] z-50 bg-green-600 text-white px-4 py-3 md:py-2 rounded hover:bg-green-700 shadow-lg text-base">
+        Agregar Inmuebles
+      </button>
     </div>
 
     <!-- Sidebar derecho: Filtros -->
-    <aside class="w-[340px] bg-white border-l border-gray-200 overflow-y-auto p-6 space-y-6 text-[17px]">
+    <aside class="w-full md:w-[340px] bg-white border-l border-gray-200 overflow-y-auto p-6 space-y-6 text-[17px]">
       <h2 class="text-lg font-bold text-green-700">Filtros y Cálculos</h2>
       <form class="space-y-4 text-sm">
         <div>
@@ -142,28 +145,27 @@
             <option>6</option>
           </select>
         </div>
-        <button class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded">Aplicar Filtros</button>
+        <button class="w-full bg-green-600 hover:bg-green-700 text-white py-3 md:py-2 rounded">Aplicar Filtros</button>
       </form>
     </aside>
 
     <!-- Panel lateral para agregar inmuebles -->
-    <div id="panelFormulario" class="w-[360px] bg-white border-l border-gray-300 p-6 overflow-y-auto space-y-4 hidden text-[17px]">
+    <div id="panelFormulario" class="fixed inset-0 md:static md:w-[360px] bg-white border-l border-gray-300 p-6 overflow-y-auto space-y-4 hidden text-[17px] z-50">
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-lg font-bold text-green-700">Agregar Inmueble</h2>
         <button id="cerrarFormulario" class="text-gray-500 hover:text-gray-700 text-xl">&times;</button>
       </div>
       <form id="form-oferta" enctype="multipart/form-data" class="space-y-3 text-sm">
-  <!-- Tipo de Inmueble -->
-  <select id="entidad"
-          name="Tipo de Inmueble"
-          required
-          class="w-full border p-2 rounded">
-    <option disabled selected>Entidad</option>
-    <option>Avaluo Banco Agrario</option>
-    <option>Avaluo SAE</option>
-    <option>Oferta</option>
-  </select>
-
+        <!-- Tipo de Inmueble -->
+        <select id="entidad"
+                name="Tipo de Inmueble"
+                required
+                class="w-full border p-2 rounded">
+          <option disabled selected>Entidad</option>
+          <option>Avaluo Banco Agrario</option>
+          <option>Avaluo SAE</option>
+          <option>Oferta</option>
+        </select>
   <!-- Fecha del Registro -->
     <label class="block font-semibold text-gray-700" for="fecha-registro">Fecha del Registro</label>
     <input type="date"
