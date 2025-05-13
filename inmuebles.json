@@ -1,0 +1,111 @@
+[
+  {
+    "ID": "1",
+    "Tipo de Inmueble": "Avaluo Banco Agrario",
+    "Clasificacion": "Urbano",
+    "Regimen": "PH",
+    "Área Hec": 0,
+    "Valor por unidad (COP)": 9,
+    "valor Integral (COP)": 9,
+    "Latitud": null,
+    "Longitud": null,
+    "Fecha del Registro": "2025-05-13",
+    "Descripción": "",
+    "unidadesFisiograficas": [
+      {
+        "nombre": "lol",
+        "valor": 5
+      }
+    ],
+    "imagenes": [],
+    "poligono": "/uploads/1747163912402-tus_datos_(20).zip"
+  },
+  {
+    "ID": "8",
+    "Tipo de Inmueble": "Avaluo Banco Agrario",
+    "Área Hec": 0,
+    "Valor por unidad (COP)": 7,
+    "valor Integral (COP)": 8,
+    "Latitud": null,
+    "Longitud": null,
+    "Fecha del Registro": "2025-05-10",
+    "Descripción": "",
+    "unidadesFisiograficas": [],
+    "imagenes": [
+      "/uploads/1747164213714-Captura_de_pantalla_2024-09-06_150737.png"
+    ],
+    "poligono": "/uploads/1747164213740-tus_datos_789.zip"
+  },
+  {
+    "ID": "3",
+    "Tipo de Inmueble": "Avaluo Banco Agrario",
+    "Clasificacion": "Urbano",
+    "Regimen": "NPH",
+    "Área Hec": 0,
+    "Valor por unidad (COP)": 122,
+    "valor Integral (COP)": 1222,
+    "Latitud": null,
+    "Longitud": null,
+    "Fecha del Registro": "2025-05-13",
+    "Descripción": "",
+    "unidadesFisiograficas": [
+      {
+        "nombre": "lol",
+        "valor": 1
+      }
+    ],
+    "imagenes": [],
+    "poligono": "/uploads/1747165362448-tus_datos_(16).zip"
+  },
+  {
+    "ID": "4",
+    "Tipo de Inmueble": "Avaluo SAE",
+    "Clasificacion": "Urbano",
+    "Regimen": "PH",
+    "Área Hec": 0,
+    "Valor por unidad (COP)": 1200000,
+    "valor Integral (COP)": 12000000,
+    "Latitud": null,
+    "Longitud": null,
+    "Fecha del Registro": "2025-05-13",
+    "Descripción": "",
+    "unidadesFisiograficas": [
+      {
+        "nombre": "1",
+        "valor": 1200000000
+      }
+    ],
+    "imagenes": [],
+    "poligono": "/uploads/1747165842379-tus_datos_(11).zip"
+  },
+  {
+    "ID": "5",
+    "Tipo de Inmueble": "Avaluo Banco Agrario",
+    "Transacción": "Venta",
+    "Clasificacion": "Urbano",
+    "Área Hec": 0,
+    "Valor por unidad (COP)": 0,
+    "valor Integral (COP)": 0,
+    "Latitud": null,
+    "Longitud": null,
+    "Fecha del Registro": "2025-05-13",
+    "Descripción": "",
+    "unidadesFisiograficas": [],
+    "imagenes": [],
+    "poligono": "/uploads/1747166188863-tus_datos_(9).zip"
+  },
+  {
+    "ID": "5",
+    "Tipo de Inmueble": "Avaluo Banco Agrario",
+    "Área Hec": 4.8,
+    "Valor por unidad (COP)": 0,
+    "valor Integral (COP)": 0,
+    "Latitud": null,
+    "Longitud": null,
+    "Fecha del Registro": "2025-05-13",
+    "Descripción": "",
+    "unidadesFisiograficas": [],
+    "imagenes": [],
+    "poligono": null
+  }
+]

@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Observatorio Inmobiliario GIS</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/leaflet-omnivore@0.3.4/leaflet-omnivore.min.js"></script>
+  <script src="https://unpkg.com/shpjs@3.4.1/dist/shp.min.js"></script>
+</head>
+<body class="font-sans text-base">
+
+  <div class="flex h-screen overflow-hidden">
+
+    <!-- Sidebar Izquierda -->
+    <aside class="w-[340px] bg-white border-r border-gray-200 overflow-y-auto p-6 space-y-6 text-[17px]">
+
+      <!-- Logo -->
+      <div class="flex items-center gap-4">
+        <img src="logo.png" alt="Logo" class="h-12 w-auto" />
+        <h1 class="text-lg font-bold text-green-700">OBSERVATORIO</h1>
+      </div>
+
+      <!-- Indicadores Generales -->
+      <div class="space-y-4">
+        <div class="bg-green-50 border border-green-200 p-4 rounded">
+          <p class="text-sm text-gray-600">Total Ofertas</p>
+          <h3 class="text-2xl font-bold text-green-800">18,732</h3>
+        </div>
+        <div class="grid grid-cols-2 gap-3 text-sm">
+          <div class="bg-gray-100 p-3 rounded">
+            <p class="text-gray-500">Venta</p>
+            <p class="font-semibold text-green-700">10,455</p>
+          </div>
+          <div class="bg-gray-100 p-3 rounded">
+            <p class="text-gray-500">Arriendo</p>
+            <p class="font-semibold text-green-700">8,277</p>
+          </div>
+          <div class="bg-gray-100 p-3 rounded">
+            <p class="text-gray-500">Mín. Venta</p>
+            <p class="text-green-700 font-medium">$145.000.000</p>
+          </div>
+          <div class="bg-gray-100 p-3 rounded">
+            <p class="text-gray-500">Prom. m² Venta</p>
+            <p class="text-green-700 font-medium">$4.350.000</p>
+          </div>
+          <div class="bg-gray-100 p-3 rounded">
+            <p class="text-gray-500">Mín. Arriendo</p>
+            <p class="text-green-700 font-medium">$650.000</p>
+          </div>
+          <div class="bg-gray-100 p-3 rounded">
+            <p class="text-gray-500">Prom. m² Arriendo</p>
+            <p class="text-green-700 font-medium">$30.500</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gráfico de Barras -->
+      <div>
+        <h3 class="text-sm font-bold mb-2">Ofertas por Tipo</h3>
+        <canvas id="chart-ofertas" height="200"></canvas>
+      </div>
+
+      <!-- Estadísticas Avanzadas -->
+      <div class="space-y-3">
+        <div class="bg-yellow-50 border border-yellow-200 p-3 rounded">
+          <p class="text-sm text-gray-600">Municipio con mayor oferta</p>
+          <h3 class="font-bold text-yellow-800">Bogotá D.C.</h3>
+        </div>
+        <div class="bg-blue-50 border border-blue-200 p-3 rounded">
+          <p class="text-sm text-gray-600">Mayor Precio m² Venta</p>
+          <h3 class="font-bold text-blue-800">$12.500.000</h3>
+        </div>
+        <div class="bg-red-50 border border-red-200 p-3 rounded">
+          <p class="text-sm text-gray-600">Mayor Precio m² Arriendo</p>
+          <h3 class="font-bold text-red-800">$85.000</h3>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Mapa central -->
+    <div class="flex-1 relative">
+      <div id="map" class="absolute inset-0 z-0"></div>
+      <button id="abrirFormulario" class="absolute top-6 right-[350px] z-50 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 shadow-lg text-lg">Agregar Inmuebles</button>
+    </div>
+
+    <!-- Sidebar derecho: Filtros -->
+    <aside class="w-[340px] bg-white border-l border-gray-200 overflow-y-auto p-6 space-y-6 text-[17px]">
+      <h2 class="text-lg font-bold text-green-700">Filtros y Cálculos</h2>
+      <form class="space-y-4 text-sm">
+        <div>
+          <label class="block font-semibold text-gray-700">Tiempo</label>
+          <select class="w-full border border-gray-300 p-2 rounded">
+            <option>1 - 6 Meses</option>
+            <option>6 - 12 Meses</option>
+            <option>Mayor a 12 Meses</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-semibold text-gray-700">ENTIDAD</label>
+          <select class="w-full border border-gray-300 p-2 rounded">
+            <option>Avaluo Banco agrario</option>
+            <option>Avaluo SAE</option>
+            <option>Oferta</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-semibold text-gray-700">Tipo de Inmueble</label>
+          <select class="w-full border border-gray-300 p-2 rounded">
+            <option>Casa</option>
+            <option>Apartamento</option>
+            <option>Oficina</option>
+            <option>Local</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-semibold text-gray-700">Precio m² (COP)</label>
+          <div class="flex gap-2">
+            <input type="number" placeholder="Desde" class="w-1/2 border p-2 rounded" />
+            <input type="number" placeholder="Hasta" class="w-1/2 border p-2 rounded" />
+          </div>
+        </div>
+        <div>
+          <label class="block font-semibold text-gray-700">Área m²</label>
+          <div class="flex gap-2">
+            <input type="number" placeholder="Mín" class="w-1/2 border p-2 rounded" />
+            <input type="number" placeholder="Máx" class="w-1/2 border p-2 rounded" />
+          </div>
+        </div>
+        <div>
+          <label class="block font-semibold text-gray-700">Estrato</label>
+          <select class="w-full border border-gray-300 p-2 rounded">
+            <option>Todos</option>
+            <option>1</option>
+            <option>2</option>
+            <option>3</option>
+            <option>4</option>
+            <option>5</option>
+            <option>6</option>
+          </select>
+        </div>
+        <button class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded">Aplicar Filtros</button>
+      </form>
+    </aside>
+
+    <!-- Panel lateral para agregar inmuebles -->
+    <div id="panelFormulario" class="w-[360px] bg-white border-l border-gray-300 p-6 overflow-y-auto space-y-4 hidden text-[17px]">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-lg font-bold text-green-700">Agregar Inmueble</h2>
+        <button id="cerrarFormulario" class="text-gray-500 hover:text-gray-700 text-xl">&times;</button>
+      </div>
+      <form id="form-oferta" enctype="multipart/form-data" class="space-y-3 text-sm">
+  <!-- Tipo de Inmueble -->
+  <select id="entidad"
+          name="Tipo de Inmueble"
+          required
+          class="w-full border p-2 rounded">
+    <option disabled selected>Entidad</option>
+    <option>Avaluo Banco Agrario</option>
+    <option>Avaluo SAE</option>
+    <option>Oferta</option>
+  </select>
+
+  <!-- Fecha del Registro -->
+    <label class="block font-semibold text-gray-700" for="fecha-registro">Fecha del Registro</label>
+    <input type="date"
+          id="fecha-registro"
+          name="Fecha del Registro"
+          required
+          class="w-full border p-2 rounded" />
+
+    <!-- ID -->
+    <input type="text"
+          id="id-inmueble"
+          name="ID"
+          required
+          placeholder="ID"
+          class="w-full border p-2 rounded" />
+
+    <!-- Transacción -->
+    <select id="transaccion"
+            name="Transaccion"
+            required
+            class="w-full border p-2 rounded">
+      <option disabled selected>Transacción</option>
+      <option>Venta</option>
+      <option>Arriendo</option>
+    </select>
+
+    <!-- Clasificación -->
+    <select id="clasificacion"
+            name="Clasificacion"
+            required
+            class="w-full border p-2 rounded">
+      <option disabled selected>Clasificación</option>
+      <option>Urbano</option>
+      <option>Rural</option>
+    </select>
+
+    <!-- Régimen -->
+    <select id="regimen"
+            name="Regimen"
+            required
+            class="w-full border p-2 rounded">
+      <option disabled selected>Régimen</option>
+      <option>PH</option>
+      <option>NPH</option>
+    </select>
+
+    <!-- Área Hec -->
+    <input type="number"
+          step="any"
+          id="area-hec"
+          name="Area Hec"
+          placeholder="Área (ha)"
+          class="w-full border p-2 rounded" />
+
+    <!-- Valor por unidad -->
+    <input type="number"
+          id="valor-unidad"
+          name="Valor por unidad (COP)"
+          placeholder="Valor por unidad (COP)"
+          class="w-full border p-2 rounded" />
+
+    <!-- Valor integral -->
+    <input type="number"
+          id="valor-integral"
+          name="valor Integral (COP)"
+          placeholder="Valor integral (COP)"
+          class="w-full border p-2 rounded" />
+
+    <!-- Latitud / Longitud -->
+    <input type="number"
+          id="latitud"
+          name="Latitud"
+          step="any"
+          placeholder="Latitud"
+          class="w-full border p-2 rounded" />
+    <input type="number"
+          id="longitud"
+          name="Longitud"
+          step="any"
+          placeholder="Longitud"
+          class="w-full border p-2 rounded" />
+
+    <!-- Unidades Fisiográficas (solo Avaluo) -->
+    <div id="contenedor-unidades" class="space-y-2 hidden">
+      <label class="block font-semibold text-gray-700">Unidades Fisiográficas</label>
+      <button type="button"
+              id="agregar-unidad"
+              class="text-sm text-blue-600 underline">+ Agregar unidad</button>
+      <div id="lista-unidades" class="space-y-2 mt-2"></div>
+    </div>
+
+    <!-- Imágenes (name coincide con multer.fields) -->
+    <label class="block font-semibold text-gray-700" for="imagenes-oferta">Imágenes del Predio</label>
+    <input type="file"
+          id="imagenes-oferta"
+          name="imagenes"
+          accept="image/*"
+          multiple
+          class="w-full border p-2 rounded" />
+
+    <!-- Descripción -->
+    <textarea id="descripcion"
+              name="Descripción"
+              placeholder="Descripción"
+              class="w-full border p-2 rounded"></textarea>
+
+    <hr class="my-4">
+
+    <!-- Polígono (name coincide con multer.fields) -->
+    <label class="block font-semibold text-gray-700" for="archivo-poligono">
+      Subir Polígono (KML, KMZ, SHP)
+    </label>
+    <input type="file"
+          id="archivo-poligono"
+          name="poligono"
+          accept=".kml,.kmz,.zip"
+          class="w-full border p-2 rounded" />
+
+    <button type="submit"
+            class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded">
+      Guardar Oferta
+    </button>
+</form>
+    </div>
+
+  </div>
+<!-- Leaflet -->
+<!-- Leaflet -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-omnivore@0.3.4/leaflet-omnivore.min.js"></script>
+<script src="https://unpkg.com/shpjs@3.4.1/dist/shp.min.js"></script>
+
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+  // ————— Inicializar el mapa —————
+  const map = L.map('map').setView([4.711, -74.072], 6);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  // ————— Helper para formatear COP —————
+  const formatPeso = v => {
+    const num = Number(v) || 0;
+    return num.toLocaleString('es-CO');
+  };
+
+  // ————— Cargar ofertas guardadas al iniciar (sin centrar) —————
+  fetch('/api/ofertas')
+    .then(res => res.ok ? res.json() : Promise.reject(res.status))
+    .then(ofertas => {
+      ofertas.forEach(oferta => {
+        if (oferta.poligono && oferta.Latitud == null) {
+          const url = oferta.poligono;
+          const ext = url.split('.').pop().toLowerCase();
+          if (ext === 'zip') {
+            fetch(url).then(r => r.arrayBuffer())
+              .then(buf => shp(buf))
+              .then(geojson => {
+                L.geoJSON(geojson, {
+                  onEachFeature: (f, lyr) => lyr.bindPopup(generarPopupHTML(oferta))
+                }).addTo(map);
+              });
+          }
+          else if (ext === 'kmz') {
+            omnivore.kmz(url).addTo(map)
+              .on('ready', function() {
+                this.eachLayer(l => l.bindPopup(generarPopupHTML(oferta)));
+              });
+          }
+          else if (ext === 'kml') {
+            omnivore.kml(url).addTo(map)
+              .on('ready', function() {
+                this.eachLayer(l => l.bindPopup(generarPopupHTML(oferta)));
+              });
+          }
+        }
+        else if (oferta.Latitud != null && oferta.Longitud != null) {
+          L.marker([oferta.Latitud, oferta.Longitud])
+            .addTo(map)
+            .bindPopup(generarPopupHTML(oferta));
+        }
+      });
+    })
+    .catch(err => console.error('Error cargando ofertas:', err));
+
+  // ————— UI: abrir/ocultar formulario —————
+  const abrirBtn = document.getElementById('abrirFormulario');
+  const cerrarBtn = document.getElementById('cerrarFormulario');
+  const panel = document.getElementById('panelFormulario');
+  abrirBtn.addEventListener('click',  () => panel.classList.remove('hidden'));
+  cerrarBtn.addEventListener('click', () => panel.classList.add('hidden'));
+
+  // ————— Chart.js —————
+  new Chart(document.getElementById('chart-ofertas').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: ['Casa','Apto','Oficina','Local'],
+      datasets: [{ data: [5234,9432,712,1354] }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales:  { y: { beginAtZero: true } }
+    }
+  });
+
+  // ————— Lógica del formulario —————
+  const tipoSelect = document.getElementById('entidad');
+  const campoLat   = document.getElementById('latitud');
+  const campoLon   = document.getElementById('longitud');
+  const uniCont    = document.getElementById('contenedor-unidades');
+  const listaUni   = document.getElementById('lista-unidades');
+  const btnAgregar = document.getElementById('agregar-unidad');
+
+  tipoSelect.addEventListener('change', () => {
+    const tipo = tipoSelect.value.toLowerCase();
+    const esOferta = tipo === 'oferta';
+    const esAvaluo = tipo.includes('avaluo');
+    campoLat.disabled = !esOferta;
+    campoLon.disabled = !esOferta;
+    campoLat.classList.toggle('bg-gray-100', !esOferta);
+    campoLon.classList.toggle('bg-gray-100', !esOferta);
+    uniCont.classList.toggle('hidden', !esAvaluo);
+  });
+
+  btnAgregar.addEventListener('click', () => {
+    const div = document.createElement('div');
+    div.className = 'flex gap-2';
+    div.innerHTML = `
+      <input type="text" placeholder="Nombre Unidad" class="flex-1 border p-2 rounded" />
+      <input type="number" placeholder="Valor" class="w-24 border p-2 rounded" />
+      <button type="button" class="text-red-500 font-bold" onclick="this.parentElement.remove()">×</button>
+    `;
+    listaUni.appendChild(div);
+  });
+
+  // ————— Envío del formulario —————
+  const form = document.getElementById('form-oferta');
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+
+    // 1️⃣ FormData automático
+    const fd = new FormData(form);
+
+    // 2️⃣ Añadir unidades como JSON
+    const unidades = Array.from(listaUni.children).map(div => {
+      const [n,v] = div.querySelectorAll('input');
+      return { nombre: n.value.trim(), valor: parseFloat(v.value) };
+    });
+    fd.set('unidadesFisiograficas', JSON.stringify(unidades));
+
+    // 3️⃣ Enviar
+    try {
+      const res = await fetch('/api/ofertas', { method:'POST', body: fd });
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+      const ct = res.headers.get('content-type')||'';
+      if (!ct.includes('application/json')) throw new Error('Respuesta no JSON');
+      const { oferta } = await res.json();
+
+      // 4️⃣ Dibujar y centrar
+      if (oferta.poligono && oferta.Latitud==null) {
+        const url = oferta.poligono;
+        const ext = url.split('.').pop().toLowerCase();
+        const cb = layer => {
+          layer.bindPopup(generarPopupHTML(oferta)).openPopup();
+          map.fitBounds(layer.getBounds());
+        };
+        if (ext==='zip') {
+          fetch(url).then(r=>r.arrayBuffer())
+            .then(buf=>shp(buf))
+            .then(geojson=>{
+              const layer = L.geoJSON(geojson,{ onEachFeature:(f,l)=>cb(l) }).addTo(map);
+            });
+        } else {
+          omnivore[ext==='kmz'?'kmz':'kml'](url).addTo(map)
+            .on('ready', function(){
+              this.eachLayer(l=>cb(l));
+            });
+        }
+      }
+      else if (oferta.Latitud!=null) {
+        const marker = L.marker([oferta.Latitud, oferta.Longitud])
+          .addTo(map)
+          .bindPopup(generarPopupHTML(oferta))
+          .openPopup();
+        map.setView([oferta.Latitud, oferta.Longitud], map.getZoom());
+      }
+
+      form.reset();
+      panel.classList.add('hidden');
+      listaUni.innerHTML = '';
+      uniCont.classList.add('hidden');
+      alert('✅ Oferta guardada y centrada en el mapa');
+    } catch (err) {
+      console.error(err);
+      alert(`❌ ${err.message}`);
+    }
+  });
+
+  // ————— Fecha por defecto —————
+  document.getElementById('fecha-registro').value =
+    new Date().toISOString().split('T')[0];
+
+  // ————— Generar el HTML del popup —————
+  function generarPopupHTML(d) {
+    const galeria = (d.imagenes||[]).map(src=>`
+      <div class="inline-block mr-2 mb-2">
+        <a href="${src}" target="_blank">
+          <img src="${src}" class="w-16 h-16 object-cover border rounded"/>
+        </a>
+      </div>`).join('');
+
+    const unidadesHTML = (d.unidadesFisiograficas||[]).length
+      ? '<strong>Unidades Fisiográficas:</strong><br>' +
+        d.unidadesFisiograficas
+         .map(u => `${u.nombre}: $${formatPeso(u.valor)}`)
+         .join('<br>') + '<br>'
+      : '';
+
+    // Descripción con saltos de línea
+    const desc = d.Descripción
+      ? d.Descripción.replace(/\n/g,'<br>')
+      : '';
+
+    return `
+      <div class="text-sm leading-tight max-w-[260px]">
+        ${d.ID?`<strong>ID:</strong> ${d.ID}<br>`:''}
+        <strong>Entidad:</strong> ${d['Tipo de Inmueble']}<br>
+        <strong>Transacción:</strong> ${d.Transacción}<br>
+        <strong>Clasificación:</strong> ${d.Clasificacion}<br>
+        <strong>Régimen:</strong> ${d.Regimen}<br>
+        <strong>Área:</strong> ${formatPeso(d['Área Hec'])} ha<br>
+        <strong>Valor unidad:</strong> $${formatPeso(d['Valor por unidad (COP)'])}<br>
+        <strong>Valor integral:</strong> $${formatPeso(d['valor Integral (COP)'])}<br>
+        <strong>Fecha:</strong> ${d['Fecha del Registro']}<br>
+        ${desc?`<strong>Descripción:</strong> ${desc}<br>`:''}
+        ${unidadesHTML}
+        ${galeria?'<strong>Imágenes:</strong><br>'+galeria:''}
+      </div>
+    `;
+  }
+});
+</script>
+
+
+</body>
+</html>
