@@ -10,6 +10,9 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://unpkg.com/leaflet-omnivore@0.3.4/leaflet-omnivore.min.js"></script>
   <script src="https://unpkg.com/shpjs@3.4.1/dist/shp.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-distortableimage/dist/leaflet.distortableimage.css">
+  <script src="https://unpkg.com/leaflet-distortableimage/dist/leaflet.distortableimage.js"></script>
+
 </head>
 <body class="font-sans text-base">
   <button id="toggleSidebarIzq" class="fixed top-4 left-4 z-60 md:hidden bg-green-600 text-white p-2 rounded">☰</button>
@@ -90,7 +93,15 @@
               class="absolute top-4 right-4 md:right-[350px] z-50 bg-green-600 text-white px-4 py-3 md:py-2 rounded hover:bg-green-700 shadow-lg text-base">
         Agregar Inmuebles
       </button>
+    <button id="btn-agregar-imagen" class="absolute bottom-4 right-4 md:right-[350px] z-50 bg-blue-600 text-white px-4 py-2 rounded shadow-lg hover:bg-blue-700">
+    📷 Agregar Capa Imagen
+    </button>
+    <button id="btn-guardar-capa" class="absolute bottom-20 right-4 md:right-[350px] z-50 bg-yellow-500 text-white px-4 py-2 rounded shadow-lg hover:bg-yellow-600 hidden">
+    💾 Guardar Capa
+    </button>
+    <input type="file" id="input-imagen-georef" accept="image/*" class="hidden" />
     </div>
+   
 
     <!-- Sidebar derecho: Filtros -->
     <aside class="w-full md:w-[340px] bg-white border-l border-gray-200 overflow-y-auto p-6 space-y-6 text-[17px]">
@@ -511,6 +522,93 @@ window.addEventListener('DOMContentLoaded', () => {
     `;
   }
 });
+// ——— Botones y estados ———
+const btnAgregarImagen = document.getElementById('btn-agregar-imagen');
+const btnGuardarCapa = document.getElementById('btn-guardar-capa');
+const inputImagen = document.getElementById('input-imagen-georef');
+
+let overlayActual = null;
+
+// ——— Abrir selector de imagen ———
+btnAgregarImagen.addEventListener('click', () => {
+  inputImagen.click();
+});
+
+// ——— Cargar imagen sobre el mapa ———
+inputImagen.addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = evt => {
+    const imgData = evt.target.result;
+    const bounds = map.getBounds();
+    const center = bounds.getCenter();
+    const deltaLat = 0.01;
+    const deltaLng = 0.01;
+
+    // Si ya hay una, la removemos
+    if (overlayActual) {
+      map.removeLayer(overlayActual);
+      overlayActual = null;
+    }
+
+    overlayActual = L.distortableImageOverlay(imgData, {
+      corners: [
+        [center.lat + deltaLat, center.lng - deltaLng],
+        [center.lat + deltaLat, center.lng + deltaLng],
+        [center.lat - deltaLat, center.lng + deltaLng],
+        [center.lat - deltaLat, center.lng - deltaLng]
+      ]
+    }).addTo(map);
+
+    overlayActual.editing.enable();
+    btnGuardarCapa.classList.remove('hidden');
+  };
+
+  reader.readAsDataURL(file);
+});
+
+// ——— Guardar imagen georreferenciada ———
+btnGuardarCapa.addEventListener('click', () => {
+  if (!overlayActual) return;
+
+  const corners = overlayActual._corners.map(c => [c.lat, c.lng]);
+  const imageDataURL = overlayActual._url;
+
+  fetch('/api/capas-imagen', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ imagen: imageDataURL, corners })
+  })
+    .then(res => {
+      if (!res.ok) throw new Error('Error al guardar la capa');
+      return res.json();
+    })
+    .then(() => {
+      alert('✅ Capa guardada correctamente');
+      btnGuardarCapa.classList.add('hidden');
+    })
+    .catch(err => {
+      console.error(err);
+      alert('❌ No se pudo guardar la capa');
+    });
+});
+
+// ——— Cargar capas guardadas al iniciar ———
+fetch('/api/capas-imagen')
+  .then(res => res.json())
+  .then(capas => {
+    capas.forEach(capa => {
+      L.distortableImageOverlay(capa.url, {
+        corners: capa.corners
+      }).addTo(map);
+    });
+  })
+  .catch(err => {
+    console.error('❌ Error cargando capas georreferenciadas:', err);
+  });
+
 </script>
 
 
