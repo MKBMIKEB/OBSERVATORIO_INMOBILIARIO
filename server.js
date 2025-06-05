@@ -6,50 +6,45 @@ const path    = require('path');
 
 const app = express();
 app.use(cors());
+app.use(express.json({ limit: '50mb' }));
 
-// 👉 Sirve TODOS tus archivos estáticos (index.html, JS, CSS, etc.)
-app.use(express.static(path.join(__dirname)));
-
-// Asegurar que exista la carpeta uploads y servirla
+// ─── Carpeta de uploads ──────────────────────────────
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
 app.use('/uploads', express.static(uploadsDir));
 
-// Multer: configuramos dos campos, imágenes y polígono
+// ─── Multer configuración ─────────────────────────────
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadsDir),
-  filename:    (req, file, cb) =>
+  filename: (req, file, cb) =>
     cb(null, Date.now() + '-' + file.originalname.replace(/\s+/g, '_'))
 });
 const upload = multer({ storage });
 
-// — POST /api/ofertas — recibe 'imagenes' (array) y 'poligono' (single)
+// ─── POST /api/ofertas ───────────────────────────────
 app.post(
   '/api/ofertas',
   upload.fields([
     { name: 'imagenes', maxCount: 10 },
-    { name: 'poligono',  maxCount: 1  }
+    { name: 'poligono', maxCount: 1 }
   ]),
   (req, res) => {
-    // ─── 1) Logs iniciales ─────────────────────────────────────────────
-    console.log('📥 req.body:',  req.body);
+    console.log('📥 req.body:', req.body);
     console.log('📥 req.files:', req.files);
 
     try {
-      // ─── 2) Parse seguro de unidadesFisiograficas ───────────────────
       const datos = req.body;
       let unidades = [];
+
       if (datos.unidadesFisiograficas) {
         try {
           unidades = JSON.parse(datos.unidadesFisiograficas);
-          console.log('✅ unidadesFisiograficas PARSED:', unidades);
-        } catch(parseErr) {
-          console.error('❌ Error parsing unidadesFisiograficas:', parseErr, 'raw:', datos.unidadesFisiograficas);
+        } catch (parseErr) {
+          console.error('❌ Error parsing unidadesFisiograficas:', parseErr);
           unidades = [];
         }
       }
 
-      // ─── 3) Montar resto de datos y archivos ────────────────────────
       const files = req.files || {};
       const imgs  = (files.imagenes || []).map(f => `/uploads/${f.filename}`);
       const poly  = files.poligono?.[0]
@@ -74,7 +69,6 @@ app.post(
         poligono:                  poly
       };
 
-      // ─── 4) Guardar en inmuebles.json ────────────────────────────────
       const filePath = path.join(__dirname, 'inmuebles.json');
       let todas = [];
       if (fs.existsSync(filePath)) {
@@ -83,21 +77,18 @@ app.post(
       todas.push(oferta);
       fs.writeFileSync(filePath, JSON.stringify(todas, null, 2), 'utf-8');
 
-      // ─── 5) Responder con la nueva oferta ────────────────────────────
       res.json({ oferta });
-    }
-    catch (err) {
-      // ─── 6) Error handling mejorado ─────────────────────────────────
+    } catch (err) {
       console.error('🔥 Error interno al guardar oferta:', err);
       res.status(500).json({
         error: err.message,
-        stack: err.stack.split('\n').slice(0,3)
+        stack: err.stack.split('\n').slice(0, 3)
       });
     }
   }
 );
 
-// GET /api/ofertas — devuelve todas las ofertas
+// ─── GET /api/ofertas ────────────────────────────────
 app.get('/api/ofertas', (req, res) => {
   const filePath = path.join(__dirname, 'inmuebles.json');
   if (!fs.existsSync(filePath)) return res.json([]);
@@ -105,11 +96,72 @@ app.get('/api/ofertas', (req, res) => {
   res.json(JSON.parse(contenido));
 });
 
-// (Opcional) mantener tu ruta antigua /api/inmuebles
+// ─── Redirección antigua ─────────────────────────────
 app.get('/api/inmuebles', (req, res) => {
   res.redirect(301, '/api/ofertas');
 });
 
+// ─── POST /api/capas-imagen ──────────────────────────
+app.post('/api/capas-imagen', (req, res) => {
+  const { imagen, corners } = req.body;
+
+  if (!imagen || !corners || !Array.isArray(corners)) {
+    return res.status(400).json({ error: 'Faltan datos: imagen o corners' });
+  }
+
+  const base64Data = imagen.replace(/^data:image\/\w+;base64,/, '');
+  const ext = imagen.split(';')[0].split('/')[1] || 'png';
+  const nombreArchivo = `capa-${Date.now()}.${ext}`;
+  const rutaArchivo = path.join(uploadsDir, nombreArchivo);
+
+  fs.writeFile(rutaArchivo, base64Data, 'base64', err => {
+    if (err) {
+      console.error('❌ Error al guardar imagen:', err);
+      return res.status(500).json({ error: 'Error al guardar imagen' });
+    }
+
+    const nuevaCapa = {
+      url: `/uploads/${nombreArchivo}`,
+      corners,
+      fecha: new Date().toISOString()
+    };
+
+    const capasPath = path.join(__dirname, 'capas.json');
+    let capas = [];
+    if (fs.existsSync(capasPath)) {
+      try {
+        capas = JSON.parse(fs.readFileSync(capasPath, 'utf-8') || '[]');
+      } catch (err) {
+        console.warn('⚠️ capas.json inválido, creando uno nuevo');
+        capas = [];
+      }
+    }
+
+    capas.push(nuevaCapa);
+    fs.writeFileSync(capasPath, JSON.stringify(capas, null, 2), 'utf-8');
+
+    res.json({ mensaje: '✅ Capa guardada', capa: nuevaCapa });
+  });
+});
+
+// ─── GET /api/capas-imagen ───────────────────────────
+app.get('/api/capas-imagen', (req, res) => {
+  const capasPath = path.join(__dirname, 'capas.json');
+  if (!fs.existsSync(capasPath)) return res.json([]);
+  const contenido = fs.readFileSync(capasPath, 'utf-8') || '[]';
+  try {
+    res.json(JSON.parse(contenido));
+  } catch (err) {
+    console.error('❌ Error al leer capas.json:', err);
+    res.status(500).json({ error: 'Archivo capas.json inválido' });
+  }
+});
+
+// ─── Servir archivos estáticos (index.html, etc.) ────
+// (esto debe ir al final)
+app.use(express.static(path.join(__dirname)));
+
+// ─── Iniciar servidor ────────────────────────────────
 app.listen(3000, () => {
   console.log('🚀 Servidor corriendo en http://localhost:3000');
 });
