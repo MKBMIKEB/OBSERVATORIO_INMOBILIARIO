@@ -3,6 +3,7 @@ const multer  = require('multer');
 const cors    = require('cors');
 const fs      = require('fs');
 const path    = require('path');
+const sharp   = require('sharp');
 
 const app = express();
 app.use(cors());
@@ -20,7 +21,24 @@ const storage = multer.diskStorage({
     cb(null, Date.now() + '-' + file.originalname.replace(/\s+/g, '_'))
 });
 const upload = multer({ storage });
+// ─── Ruta para convertir TIFF a PNG on-the-fly ─────────────────────────
+app.get('/planos/:name.png', async (req, res) => {
+  try {
+    const nombre  = req.params.name; // ej. "1749402858155-usos_g"
+    const tiffPath = path.join(uploadsDir, nombre + '.tif');
 
+    // Leer y convertir a PNG en memoria
+    const pngBuffer = await sharp(tiffPath)
+      .png()
+      .toBuffer();
+
+    // Devolver como imagen PNG
+    res.type('image/png').send(pngBuffer);
+  } catch (err) {
+    console.error('Error convirtiendo TIFF a PNG:', err);
+    res.status(404).send('Plano no encontrado o error al convertir.');
+  }
+});
 // ─── POST /api/ofertas ───────────────────────────────
 app.post(
   '/api/ofertas',
