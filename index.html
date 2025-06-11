@@ -6,6 +6,22 @@
   <title>Observatorio Inmobiliario GIS</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+/* Suaviza los píxeles ABSOLUTAMENTE */
+.leaflet-tile-container canvas,
+.leaflet-overlay-pane canvas {
+  image-rendering:
+    optimizeSpeed        /* FF < 24 */
+    -moz-crisp-edges     /* FF 24+ */
+    -o-crisp-edges       /* Opera */
+    -webkit-optimize-contrast /* Safari */
+    pixelated            /* Chrome */
+    crisp-edges;         /* estándar actual */
+  /* IE 10+ */
+  -ms-interpolation-mode: nearest-neighbor;
+}
+</style>
+
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://unpkg.com/leaflet-omnivore@0.3.4/leaflet-omnivore.min.js"></script>
@@ -87,276 +103,243 @@
     </aside>
 
    <!-- Mapa central -->
-<div class="flex-1 relative">
-  <div id="map" class="absolute inset-0 h-64 md:h-full z-0"></div>
+ <!-- ========== COLUMNA PRINCIPAL (Mapa + Botones) ========== -->
+  <div class="flex-1 relative pr-[140px]">
+    <!-- Mapa -->
+    <div id="map" class="absolute inset-0 h-64 md:h-full z-0"></div>
 
-  <!-- Botón Agregar Inmuebles -->
-  <button id="abrirFormulario"
-          class="absolute top-4 right-4 md:right-[350px] z-50 bg-green-600 text-white px-4 py-3 md:py-2 rounded hover:bg-green-700 shadow-lg text-base">
-    Agregar Inmuebles
-  </button>
+    <!-- Barra fija de botones a la derecha -->
+    <div
+      id="sidebar-botones"
+      class="fixed top-0 right-0 h-screen w-[140px]
+             bg-white border-l border-gray-300 z-30 shadow-md flex flex-col"
+    >
+      <button
+        id="abrirNorma"
+        class="flex-1 w-full bg-blue-600 hover:bg-blue-700
+               text-white text-lg font-semibold px-4 py-2 text-center"
+      >📘 NORMA</button>
+      <button
+        id="abrirFormulario"
+        class="flex-1 w-full bg-green-600 hover:bg-green-700
+               text-white text-lg font-semibold px-4 py-2 text-center"
+      >➕ Agregar Inmuebles</button>
+      <button
+        id="btn-salida-grafica"
+        class="flex-1 w-full bg-purple-600 hover:bg-purple-700
+               text-white text-lg font-semibold px-4 py-2 text-center"
+      >📊 Salida Gráfica</button>
+    </div>
+  </div>
 
-  <!-- Botón Cargar GeoTIFF -->
-  <button id="btn-cargar-tif"
-          class="fixed bottom-4 left-4 z-50 bg-purple-600 text-white px-4 py-2 rounded shadow-lg hover:bg-purple-700">
-    📥 Cargar GeoTIFF
-  </button>
-  <input type="file" id="input-tif" accept=".tif,.tiff" class="hidden" />
-</div>
-
-    <!-- Sidebar derecho: Filtros -->
-    <aside class="w-full md:w-[340px] bg-white border-l border-gray-200 overflow-y-auto p-6 space-y-6 text-[17px]">
-      <button id="closeSidebarIzq" class="md:hidden absolute top-4 right-4 text-gray-500">×</button>
-      <h2 class="text-lg font-bold text-green-700">Filtros y Cálculos</h2>
-      <form class="space-y-4 text-sm">
-        <div>
-          <label class="block font-semibold text-gray-700">Tiempo</label>
-          <select class="w-full border border-gray-300 p-2 rounded">
-            <option>1 - 6 Meses</option>
-            <option>6 - 12 Meses</option>
-            <option>Mayor a 12 Meses</option>
-          </select>
-        </div>
-        <div>
-          <label class="block font-semibold text-gray-700">ENTIDAD</label>
-          <select class="w-full border border-gray-300 p-2 rounded">
-            <option>Avaluo Banco agrario</option>
-            <option>Avaluo SAE</option>
-            <option>Oferta</option>
-          </select>
-        </div>
-        <div>
-          <label class="block font-semibold text-gray-700">Tipo de Inmueble</label>
-          <select class="w-full border border-gray-300 p-2 rounded">
-            <option>Casa</option>
-            <option>Apartamento</option>
-            <option>Oficina</option>
-            <option>Local</option>
-          </select>
-        </div>
-        <div>
-          <label class="block font-semibold text-gray-700">Precio m² (COP)</label>
-          <div class="flex gap-2">
-            <input type="number" placeholder="Desde" class="w-1/2 border p-2 rounded" />
-            <input type="number" placeholder="Hasta" class="w-1/2 border p-2 rounded" />
-          </div>
-        </div>
-        <div>
-          <label class="block font-semibold text-gray-700">Área m²</label>
-          <div class="flex gap-2">
-            <input type="number" placeholder="Mín" class="w-1/2 border p-2 rounded" />
-            <input type="number" placeholder="Máx" class="w-1/2 border p-2 rounded" />
-          </div>
-        </div>
-        <div>
-          <label class="block font-semibold text-gray-700">Estrato</label>
-          <select class="w-full border border-gray-300 p-2 rounded">
-            <option>Todos</option>
-            <option>1</option>
-            <option>2</option>
-            <option>3</option>
-            <option>4</option>
-            <option>5</option>
-            <option>6</option>
-          </select>
-        </div>
-        <button class="w-full bg-green-600 hover:bg-green-700 text-white py-3 md:py-2 rounded">Aplicar Filtros</button>
-      </form>
-    </aside>
-
-    <!-- Panel lateral para agregar inmuebles -->
-    <div id="panelFormulario" class="fixed inset-0 md:static md:w-[360px] bg-white border-l border-gray-300 p-6 overflow-y-auto space-y-4 hidden text-[17px] z-50">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-lg font-bold text-green-700">Agregar Inmueble</h2>
-        <button id="cerrarFormulario" class="text-gray-500 hover:text-gray-700 text-xl">&times;</button>
+  <!-- ========== COLUMNA DE FILTROS ========== -->
+  <aside
+    class="w-full md:w-[340px] md:mr-[140px]
+           bg-white border-l border-gray-200
+           overflow-y-auto p-6 space-y-6 text-[17px]"
+  >
+    <button
+      id="closeSidebarIzq"
+      class="md:hidden absolute top-4 right-4 text-gray-500"
+    >×</button>
+    <h2 class="text-lg font-bold text-green-700">Filtros y Cálculos</h2>
+    <form class="space-y-4 text-sm">
+      <div>
+        <label class="block font-semibold text-gray-700">Tiempo</label>
+        <select class="w-full border border-gray-300 p-2 rounded">
+          <option>1 - 6 Meses</option>
+          <option>6 - 12 Meses</option>
+          <option>Mayor a 12 Meses</option>
+        </select>
       </div>
-      <form id="form-oferta" enctype="multipart/form-data" class="space-y-3 text-sm">
-        <!-- Tipo de Inmueble -->
-        <select id="entidad"
-                name="Tipo de Inmueble"
-                required
-                class="w-full border p-2 rounded">
-          <option disabled selected>Entidad</option>
-          <option>Avaluo Banco Agrario</option>
+      <div>
+        <label class="block font-semibold text-gray-700">ENTIDAD</label>
+        <select class="w-full border border-gray-300 p-2 rounded">
+          <option>Avaluo Banco agrario</option>
           <option>Avaluo SAE</option>
           <option>Oferta</option>
         </select>
-  <!-- Fecha del Registro -->
-    <label class="block font-semibold text-gray-700" for="fecha-registro">Fecha del Registro</label>
-    <input type="date"
-          id="fecha-registro"
-          name="Fecha del Registro"
-          required
-          class="w-full border p-2 rounded" />
-
-    <!-- ID -->
-    <input type="text"
-          id="id-inmueble"
-          name="ID"
-          required
-          placeholder="ID"
-          class="w-full border p-2 rounded" />
-
-    <!-- Transacción -->
-    <select id="transaccion"
-            name="Transaccion"
-            required
-            class="w-full border p-2 rounded">
-      <option disabled selected>Transacción</option>
-      <option>Venta</option>
-      <option>Arriendo</option>
-    </select>
-
-    <!-- Clasificación -->
-    <select id="clasificacion"
-            name="Clasificacion"
-            required
-            class="w-full border p-2 rounded">
-      <option disabled selected>Clasificación</option>
-      <option>Urbano</option>
-      <option>Rural</option>
-    </select>
-
-    <!-- Régimen -->
-    <select id="regimen"
-            name="Regimen"
-            required
-            class="w-full border p-2 rounded">
-      <option disabled selected>Régimen</option>
-      <option>PH</option>
-      <option>NPH</option>
-    </select>
-
-    <!-- Área Hec -->
-    <input type="number"
-          step="any"
-          id="area-hec"
-          name="Area Hec"
-          placeholder="Área (ha)"
-          class="w-full border p-2 rounded" />
-
-    <!-- Valor por unidad -->
-    <input type="number"
-          id="valor-unidad"
-          name="Valor por unidad (COP)"
-          placeholder="Valor por unidad (COP)"
-          class="w-full border p-2 rounded" />
-
-    <!-- Valor integral -->
-    <input type="number"
-          id="valor-integral"
-          name="valor Integral (COP)"
-          placeholder="Valor integral (COP)"
-          class="w-full border p-2 rounded" />
-
-    <!-- Latitud / Longitud -->
-    <input type="number"
-          id="latitud"
-          name="Latitud"
-          step="any"
-          placeholder="Latitud"
-          class="w-full border p-2 rounded" />
-    <input type="number"
-          id="longitud"
-          name="Longitud"
-          step="any"
-          placeholder="Longitud"
-          class="w-full border p-2 rounded" />
-
-    <!-- Unidades Fisiográficas (solo Avaluo) -->
-    <div id="contenedor-unidades" class="space-y-2 hidden">
-      <label class="block font-semibold text-gray-700">Unidades Fisiográficas</label>
-      <button type="button"
-              id="agregar-unidad"
-              class="text-sm text-blue-600 underline">+ Agregar unidad</button>
-      <div id="lista-unidades" class="space-y-2 mt-2"></div>
-    </div>
-
-    <!-- Imágenes (name coincide con multer.fields) -->
-    <label class="block font-semibold text-gray-700" for="imagenes-oferta">Imágenes del Predio</label>
-    <input type="file"
-          id="imagenes-oferta"
-          name="imagenes"
-          accept="image/*"
-          multiple
-          class="w-full border p-2 rounded" />
-
-    <!-- Descripción -->
-    <textarea id="descripcion"
-              name="Descripción"
-              placeholder="Descripción"
-              class="w-full border p-2 rounded"></textarea>
-
-    <hr class="my-4">
-
-    <!-- Polígono (name coincide con multer.fields) -->
-    <label class="block font-semibold text-gray-700" for="archivo-poligono">
-      Subir Polígono (KML, KMZ, SHP)
-    </label>
-    <input type="file"
-          id="archivo-poligono"
-          name="poligono"
-          accept=".kml,.kmz,.zip"
-          class="w-full border p-2 rounded" />
-
-    <button type="submit"
-            class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded">
-      Guardar Oferta
-    </button>
-</form>
-    </div>
-<button id="abrirNorma"
-        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow">
-  📘 NORMA
-</button>
-    <div id="panelNorma" class="fixed inset-0 bg-white z-50 p-6 overflow-y-auto hidden">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-xl font-bold text-blue-700">Normas Reglamentarias</h2>
-        <button id="cerrarNorma" class="text-gray-500 text-2xl hover:text-gray-700">&times;</button>
       </div>
-
-      <!-- Filtros -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        <select id="filtro-departamento" class="border p-2 rounded">
-          <option value="">Departamento</option>
-        </select>
-        <select id="filtro-municipio" class="border p-2 rounded">
-          <option value="">Municipio</option>
+      <div>
+        <label class="block font-semibold text-gray-700">Tipo de Inmueble</label>
+        <select class="w-full border border-gray-300 p-2 rounded">
+          <option>Casa</option>
+          <option>Apartamento</option>
+          <option>Oficina</option>
+          <option>Local</option>
         </select>
       </div>
-
-      <!-- Tabla -->
-      <div class="overflow-x-auto">
-        <table class="min-w-full border text-sm" id="tabla-normas">
-          <thead class="bg-gray-100">
-            <tr>
-              <th class="border p-2">Título</th>
-              <th class="border p-2">Año</th>
-              <th class="border p-2">Decretos</th>
-              <th class="border p-2">Descargar</th>
-            </tr>
-          </thead>
-          <tbody id="tbody-normas">
-            <!-- Filas dinámicas -->
-          </tbody>
-        </table>
+      <div>
+        <label class="block font-semibold text-gray-700">Precio m² (COP)</label>
+        <div class="flex gap-2">
+          <input type="number" placeholder="Desde" class="w-1/2 border p-2 rounded"/>
+          <input type="number" placeholder="Hasta" class="w-1/2 border p-2 rounded"/>
+        </div>
       </div>
+      <div>
+        <label class="block font-semibold text-gray-700">Área m²</label>
+        <div class="flex gap-2">
+          <input type="number" placeholder="Mín" class="w-1/2 border p-2 rounded"/>
+          <input type="number" placeholder="Máx" class="w-1/2 border p-2 rounded"/>
+        </div>
+      </div>
+      <div>
+        <label class="block font-semibold text-gray-700">Estrato</label>
+        <select class="w-full border border-gray-300 p-2 rounded">
+          <option>Todos</option>
+          <option>1</option>
+          <option>2</option>
+          <option>3</option>
+          <option>4</option>
+          <option>5</option>
+          <option>6</option>
+        </select>
+      </div>
+      <button class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded">
+        Aplicar Filtros
+      </button>
+    </form>
+  </aside>
 
-      <!-- Formulario para agregar nueva norma -->
-      <h3 class="mt-6 text-lg font-bold text-blue-600">Agregar Nueva Norma</h3>
-      <form id="form-norma" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-        <input type="text" id="norma-titulo" placeholder="Título" class="border p-2 rounded" required />
-        <input type="number" id="norma-ano" placeholder="Año" class="border p-2 rounded" required />
-        <input type="text" id="norma-decretos" placeholder="Decretos" class="border p-2 rounded" required />
-        <input type="text" id="norma-departamento" placeholder="Departamento" class="border p-2 rounded" required />
-        <input type="text" id="norma-municipio" placeholder="Municipio" class="border p-2 rounded" required />
-        <input type="file" id="norma-pdf" accept="application/pdf" class="border p-2 rounded" required />
-        <button type="submit" class="col-span-2 bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
-          Guardar Norma
+  <!-- ========== PANEL “Agregar Inmueble” ========== -->
+  <div
+    id="panelFormulario"
+    class="fixed inset-0 md:static md:w-[360px]
+           bg-white border-l border-gray-300 p-6
+           overflow-y-auto space-y-4 hidden text-[17px] z-50"
+  >
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-lg font-bold text-green-700">Agregar Inmueble</h2>
+      <button id="cerrarFormulario" class="text-gray-500 hover:text-gray-700 text-2xl">
+        &times;
+      </button>
+    </div>
+    <form id="form-oferta" enctype="multipart/form-data" class="space-y-3 text-sm">
+      <select id="entidad" name="Tipo de Inmueble" required class="w-full border p-2 rounded">
+        <option disabled selected>Entidad</option>
+        <option>Avaluo Banco Agrario</option>
+        <option>Avaluo SAE</option>
+        <option>Oferta</option>
+      </select>
+
+      <label class="block font-semibold text-gray-700" for="fecha-registro">Fecha del Registro</label>
+      <input type="date" id="fecha-registro" name="Fecha del Registro" required class="w-full border p-2 rounded"/>
+
+      <input type="text" id="id-inmueble" name="ID" required placeholder="ID" class="w-full border p-2 rounded"/>
+
+      <select id="transaccion" name="Transaccion" required class="w-full border p-2 rounded">
+        <option disabled selected>Transacción</option>
+        <option>Venta</option>
+        <option>Arriendo</option>
+      </select>
+
+      <select id="clasificacion" name="Clasificacion" required class="w-full border p-2 rounded">
+        <option disabled selected>Clasificación</option>
+        <option>Urbano</option>
+        <option>Rural</option>
+      </select>
+
+      <select id="regimen" name="Regimen" required class="w-full border p-2 rounded">
+        <option disabled selected>Régimen</option>
+        <option>PH</option>
+        <option>NPH</option>
+      </select>
+
+      <input type="number" step="any" id="area-hec" name="Area Hec" placeholder="Área (ha)" class="w-full border p-2 rounded"/>
+
+      <input type="number" id="valor-unidad" name="Valor por unidad (COP)" placeholder="Valor por unidad (COP)" class="w-full border p-2 rounded"/>
+
+      <input type="number" id="valor-integral" name="valor Integral (COP)" placeholder="Valor integral (COP)" class="w-full border p-2 rounded"/>
+
+      <input type="number" id="latitud" name="Latitud" step="any" placeholder="Latitud" class="w-full border p-2 rounded"/>
+      <input type="number" id="longitud" name="Longitud" step="any" placeholder="Longitud" class="w-full border p-2 rounded"/>
+
+      <div id="contenedor-unidades" class="space-y-2 hidden">
+        <label class="block font-semibold text-gray-700">Unidades Fisiográficas</label>
+        <button type="button" id="agregar-unidad" class="text-sm text-blue-600 underline">
+          + Agregar unidad
         </button>
-      </form>
+        <div id="lista-unidades" class="space-y-2 mt-2"></div>
+      </div>
+
+      <label class="block font-semibold text-gray-700" for="imagenes-oferta">Imágenes del Predio</label>
+      <input type="file" id="imagenes-oferta" name="imagenes" accept="image/*" multiple class="w-full border p-2 rounded"/>
+
+      <textarea id="descripcion" name="Descripción" placeholder="Descripción" class="w-full border p-2 rounded"></textarea>
+
+      <hr class="my-4"/>
+
+      <label class="block font-semibold text-gray-700" for="archivo-poligono">
+        Subir Polígono (KML, KMZ, SHP)
+      </label>
+      <input type="file" id="archivo-poligono" name="poligono" accept=".kml,.kmz,.zip" class="w-full border p-2 rounded"/>
+
+      <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded">
+        Guardar Oferta
+      </button>
+    </form>
+  </div>
+
+  <!-- ========== PANEL “Normas Reglamentarias” ========== -->
+  <div
+    id="panelNorma"
+    class="fixed top-0 right-0 h-full w-full md:w-[600px]
+           bg-white border-l border-gray-300 z-50 p-6
+           overflow-y-auto transform translate-x-full
+           transition-transform duration-300"
+  >
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-xl font-bold text-blue-700">Normas Reglamentarias</h2>
+      <button id="cerrarNorma" class="text-gray-500 hover:text-gray-700 text-2xl">
+        &times;
+      </button>
     </div>
 
+    <!-- Filtros de norma -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <select id="filtro-departamento" class="border p-2 rounded">
+        <option value="">Departamento</option>
+      </select>
+      <select id="filtro-municipio" class="border p-2 rounded">
+        <option value="">Municipio</option>
+      </select>
+    </div>
+
+    <!-- Tabla de normas -->
+    <div class="overflow-x-auto">
+      <table class="min-w-full border text-sm" id="tabla-normas">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="border p-2">Departamento</th>
+            <th class="border p-2">Municipio</th>
+            <th class="border p-2">Título</th>
+            <th class="border p-2">Año</th>
+            <th class="border p-2">Artículos</th>
+            <th class="border p-2">Norma</th>
+            <th class="border p-2">Plano usos</th>
+            <th class="border p-2">Ver</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-normas">
+          <!-- Filas dinámicas -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Formulario para nueva norma -->
+    <h3 class="mt-6 text-lg font-bold text-blue-600">Agregar Nueva Norma</h3>
+    <form id="form-norma" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4" enctype="multipart/form-data">
+      <input type="text" id="norma-titulo" name="titulo" placeholder="Título" class="border p-2 rounded" required/>
+      <input type="number" id="norma-ano" name="ano" placeholder="Año" class="border p-2 rounded" required/>
+      <input type="text" id="norma-decretos" name="decretos" placeholder="Decretos" class="border p-2 rounded" required/>
+      <input type="text" id="norma-departamento" name="departamento" placeholder="Departamento" class="border p-2 rounded" required/>
+      <input type="text" id="norma-municipio" name="municipio" placeholder="Municipio" class="border p-2 rounded" required/>
+      <input type="file" id="norma-pdf"   name="archivo" accept="application/pdf" class="border p-2 rounded" required/>
+      <input type="file" id="norma-plano" name="plano"  accept=".kml,.geojson,.zip,.tif,.tiff" class="border p-2 rounded" required/>
+      <button type="submit" class="col-span-2 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded">
+        Guardar Norma
+      </button>
+    </form>
   </div>
 
 
@@ -370,6 +353,9 @@
 <script src="https://unpkg.com/shpjs@3.4.1/dist/shp.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.8.0/proj4.js"></script>
 <script src="https://unpkg.com/geotiff/dist/geotiff.bundle.min.js"></script>
+<script src="https://unpkg.com/georaster"></script>
+<script src="https://unpkg.com/georaster-layer-for-leaflet"></script>
+
 <script>
   // ————— Variables globales —————
   let map;
@@ -545,63 +531,6 @@
       })
       .catch(err => console.error('❌ Error cargando capas georreferenciadas:', err));
 
-    // ————— 10) GeoTIFF: carga automática y superposición —————
-  // ————— 8) GeoTIFF: carga, decodificación y reproyección —————
-    const btnCargarTif=document.getElementById('btn-cargar-tif'),
-          inputTif=document.getElementById('input-tif');
-
-    btnCargarTif.addEventListener('click',()=>inputTif.click());
-
-   inputTif.addEventListener('change', async e => {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  // — a) Leer GeoTIFF —
-  const buffer = await file.arrayBuffer();
-  const tiff   = await GeoTIFF.fromArrayBuffer(buffer);
-  const img    = await tiff.getImage();
-  const width  = img.getWidth();
-  const height = img.getHeight();
-
-  // — b) Decodificar a PNG (canvas) —
-  const rasters = await img.readRasters({ interleave: true });
-  const canvas  = document.createElement('canvas');
-  canvas.width  = width;
-  canvas.height = height;
-  const ctx     = canvas.getContext('2d');
-  const imgData = ctx.createImageData(width, height);
-  imgData.data.set(rasters);
-  ctx.putImageData(imgData, 0, 0);
-  const pngUrl = canvas.toDataURL('image/png');
-
-  // — c) Calcular bounding box usando tiepoint + pixelScale —
-  const tiepoint   = img.getTiePoints()[0];                     // { i, j, x, y, … }
-  const pixelScale = img.getFileDirectory().ModelPixelScale;    // [ scaleX, scaleY, … ]
-
-  // coordenada de la esquina superior-izquierda (i=0,j=0)
-  const originX = tiepoint.x;  
-  const originY = tiepoint.y;
-
-  // Extremos reales en EPSG:3116 (metros)
-  const minX = originX;
-  const maxY = originY;
-  const maxX = originX + pixelScale[0] * width;
-  const minY = originY - pixelScale[1] * height;
-
-  // — d) Reproyectar a WGS84 —
-  // proj4.defs("EPSG:3116", "..."); debe venir antes en tu script
-  const [swLng, swLat] = proj4("EPSG:3116","EPSG:4326",[minX, minY]);
-  const [neLng, neLat] = proj4("EPSG:3116","EPSG:4326",[maxX, maxY]);
-
-  const bounds = L.latLngBounds(
-    [ swLat, swLng ],
-    [ neLat, neLng ]
-  );
-
-  // — e) Superponer en Leaflet —
-  L.imageOverlay(pngUrl, bounds).addTo(map);
-  map.fitBounds(bounds);
-    });
     // ————— 11) Función para generar el HTML del popup —————
     function generarPopupHTML(d) {
       const galeria = (d.imagenes||[]).map(src => `
@@ -708,14 +637,17 @@
   const abrirNormaBtn = document.getElementById('abrirNorma');
   const cerrarNormaBtn = document.getElementById('cerrarNorma');
   const panelNorma = document.getElementById('panelNorma');
-  const formNorma = document.getElementById('form-norma');
-  const tbodyNormas = document.getElementById('tbody-normas');
 
   const normas = []; // Aquí se almacenarán las normas cargadas
 
-  abrirNormaBtn.addEventListener('click', () => panelNorma.classList.remove('hidden'));
-  cerrarNormaBtn.addEventListener('click', () => panelNorma.classList.add('hidden'));
-
+  abrirNormaBtn.addEventListener('click', () => {
+    panelNorma.classList.remove('translate-x-full');
+    panelNorma.classList.add('translate-x-0');
+    });
+  cerrarNormaBtn.addEventListener('click', () => {
+    panelNorma.classList.remove('translate-x-0');
+    panelNorma.classList.add('translate-x-full');
+  });
   formNorma.addEventListener('submit', e => {
     e.preventDefault();
 
@@ -749,11 +681,15 @@
         <td class="border p-2 text-center">
           <a href="${norma.pdfURL}" download="${norma.titulo}.pdf" class="text-blue-600 underline">📥</a>
         </td>
+        <td class="border p-2 text-center">
+        <button onclick="visualizarPlanoDeNorma('${n.plano}')">🗺️</button>
+        </td>
       `;
       tbodyNormas.appendChild(fila);
     });
   }
 </script>
+<script src="normas.js"></script>
 
 </body>
 </html>

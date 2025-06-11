@@ -156,6 +156,68 @@ app.get('/api/capas-imagen', (req, res) => {
     res.status(500).json({ error: 'Archivo capas.json inválido' });
   }
 });
+// ─── POST /api/normas ───────────────────────────────
+const normasFile = path.join(__dirname, 'normas.json');
+
+app.post(
+  '/api/normas',
+  upload.fields([
+    { name: 'archivo', maxCount: 1 },  // PDF de la norma
+    { name: 'plano', maxCount: 1 }     // Plano georreferenciado (TIFF/KML/etc.)
+  ]),
+  (req, res) => {
+    try {
+      const datos = req.body;
+      const archivos = req.files;
+
+      if (!archivos || !archivos.archivo || !archivos.plano) {
+        return res.status(400).json({ error: 'Faltan archivo PDF o plano georreferenciado' });
+      }
+
+      const nuevaNorma = {
+        titulo: datos.titulo,
+        ano: datos.ano,
+        decretos: datos.decretos,
+        departamento: datos.departamento,
+        municipio: datos.municipio,
+        archivo: `/uploads/${archivos.archivo[0].filename}`,
+        plano: `/uploads/${archivos.plano[0].filename}`,
+        fechaRegistro: new Date().toISOString()
+      };
+
+      let todas = [];
+      if (fs.existsSync(normasFile)) {
+        todas = JSON.parse(fs.readFileSync(normasFile, 'utf-8') || '[]');
+      }
+      todas.push(nuevaNorma);
+      fs.writeFileSync(normasFile, JSON.stringify(todas, null, 2), 'utf-8');
+
+      res.json({ mensaje: '✅ Norma guardada', norma: nuevaNorma });
+    } catch (err) {
+      console.error('❌ Error al guardar norma:', err);
+      res.status(500).json({ error: 'Error interno al guardar norma' });
+    }
+  }
+);
+
+// ─── GET /api/normas ────────────────────────────────
+// ─── GET /api/normas ────────────────────────────────
+app.get('/api/normas', (req, res) => {
+  try {
+    if (!fs.existsSync(normasFile)) return res.json([]);
+    
+    const contenido = fs.readFileSync(normasFile, 'utf-8') || '[]';
+    const normas = JSON.parse(contenido);
+    
+    res.json(normas);
+  } catch (err) {
+    console.error('❌ Error al guardar norma:', err.message);
+    console.error(err.stack);
+    console.error('❌ Error leyendo normas.json:', err);
+    res.status(500).json({ error: 'normas.json inválido' });
+  }
+});
+
 
 // ─── Servir archivos estáticos (index.html, etc.) ────
 // (esto debe ir al final)

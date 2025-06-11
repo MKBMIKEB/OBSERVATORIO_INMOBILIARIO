@@ -107,5 +107,22 @@
     "unidadesFisiograficas": [],
     "imagenes": [],
     "poligono": null
+  },
+  {
+    "ID": "5",
+    "Tipo de Inmueble": "Avaluo Banco Agrario",
+    "Transacción": "Venta",
+    "Clasificacion": "Urbano",
+    "Regimen": "PH",
+    "Área Hec": 4.8,
+    "Valor por unidad (COP)": 121212121212,
+    "valor Integral (COP)": 12121212122112120000,
+    "Latitud": null,
+    "Longitud": null,
+    "Fecha del Registro": "2025-06-08",
+    "Descripción": "",
+    "unidadesFisiograficas": [],
+    "imagenes": [],
+    "poligono": "/uploads/1749355850548-tus_datos_(27).zip"
   }
 ]
