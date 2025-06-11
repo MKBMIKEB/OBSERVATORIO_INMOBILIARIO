@@ -140,41 +140,37 @@ async function visualizarPlanoDeNorma(url, index, boton) {
   if (ext !== 'tif' && ext !== 'tiff') return;
 
   try {
-    // 3) Descargamos y parseamos el GeoTIFF
-    const resp       = await fetch(url);
-    const arrayBuffer= await resp.arrayBuffer();
-    const georaster  = await parseGeoraster(arrayBuffer);
+    // ─── Construir URL del PNG convertido por tu endpoint Express ────
+    const filename  = url.split('/').pop();            // ej. "1749402858155-usos_g.tif"
+    const nameOnly  = filename.replace(/\.\w+$/, '');   // "1749402858155-usos_g"
+    const pngURL    = `/planos/${nameOnly}.png`;        // apunta a GET /planos/:name.png
 
-    // 4) Creamos la capa con georaster-layer-for-leaflet
-    const layer = new GeoRasterLayer({
-      georaster,
-      // Opcional: ajustar el tamaño de tile para menos pixelación
-      resolution: 512,
-      // Si son 3 bandas RGB, devolvemos el color directamente:
-      pixelValuesToColorFn: values => {
-        if (values.length >= 3) {
-          const [r,g,b,a] = values;
-          // Normaliza canal alfa a 0–1 si existe
-          const alpha = a!==undefined ? a/255 : 1;
-          return `rgba(${r},${g},${b},${alpha})`;
-        }
-        return null;
-      }
-    });
+    // ─── Obtener el GeoTIFF solo para extraer bounds ───────────────
+    const resp        = await fetch(url);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const arrayBuffer = await resp.arrayBuffer();
+    const georaster   = await parseGeoraster(arrayBuffer);
+    // Bounds en lat/lng: [[south, west], [north, east]]
+    const bounds = [
+      [georaster.ymin, georaster.xmin],
+      [georaster.ymax, georaster.xmax]
+    ];
 
-    // 5) Lo añadimos al mapa y ajustamos vista
-    layer.addTo(map);
-    map.fitBounds(layer.getBounds());
-
-    // 6) Guardamos referencia y actualizamos el botón
+    // ─── Crear overlay de imagen con el PNG ────────────────────────
+    const layer = L.imageOverlay(pngURL, bounds, { opacity: 0.7 }).addTo(map);
     capasNormas.set(index, layer);
+    map.fitBounds(bounds);
+
+    // ─── Actualizar el botón ───────────────────────────────────────
     boton.textContent = '❌ Ocultar Plano';
     boton.classList.replace('bg-indigo-600','bg-red-600');
+
   } catch (err) {
-    console.error('❌ Error cargando TIFF como imagen:', err);
+    console.error('❌ Error cargando TIFF/PNG de norma:', err);
     alert('❌ No se pudo cargar el plano');
   }
 }
+
 });
 
 
