@@ -37,70 +37,103 @@
   <div class="flex flex-col md:flex-row h-screen overflow-hidden">
 
     <!-- Sidebar Izquierda -->
-    <aside class="w-full md:w-[340px] bg-white border-r border-gray-200 overflow-y-auto p-6 space-y-6 text-[17px]">
-     <button id="closeSidebarIzq" class="md:hidden absolute top-4 right-4 text-gray-500">×</button>
-      <!-- Logo -->
-      <div class="flex items-center gap-4">
-        <img src="logo.png" alt="Logo" class="h-12 w-auto" />
-        <h1 class="text-lg font-bold text-green-700">OBSERVATORIO</h1>
+   <aside class="w-full md:w-80 bg-white border-r p-6 space-y-6 overflow-y-auto">
+  <!-- Logo -->
+  <div class="flex items-center gap-4">
+    <img src="logo.png" alt="Logo" class="h-12" />
+    <h1 class="text-xl font-bold text-green-700">OBSERVATORIO</h1>
+  </div>
+ 
+  <!-- Checklist de Ofertas Visibles -->
+  <fieldset class="border p-2">
+    <legend class="font-semibold">Ofertas visibles</legend>
+    <div id="lista-ofertas" class="max-h-40 overflow-y-auto"></div>
+  </fieldset>
+  
+  <!-- Indicadores Generales -->
+  <div class="space-y-4">
+    <!-- Total Ofertas -->
+    <div class="bg-green-50 border border-green-200 p-4 rounded">
+      <p class="text-sm text-gray-600">Total Ofertas</p>
+      <h3 id="stat-total" class="text-2xl font-bold text-green-800">0</h3>
+    </div>
+    <!-- Venta / Arriendo -->
+    <div class="grid grid-cols-2 gap-3 text-sm">
+      <div class="bg-gray-100 p-3 rounded">
+        <p class="text-gray-500">Venta</p>
+        <p id="stat-venta" class="font-semibold text-green-700">0</p>
+      </div>
+      <div class="bg-gray-100 p-3 rounded">
+        <p class="text-gray-500">Arriendo</p>
+        <p id="stat-arriendo" class="font-semibold text-green-700">0</p>
+      </div>
+      <div class="bg-gray-50 border p-2 rounded">
+        <p class="text-gray-500">Desv. Estándar</p>
+        <p id="stat-std-unit" class="font-medium text-green-700">—</p>
+      </div>
+      <div class="bg-gray-50 border p-2 rounded">
+        <p class="text-gray-500">Coef. Variación</p>
+        <p id="stat-cv-unit" class="font-medium text-green-700">—</p>
+      </div>
+      <div class="bg-gray-50 border p-2 rounded">
+        <p class="text-gray-500">Límite Inferior</p>
+        <p id="stat-low-unit" class="font-medium text-green-700">—</p>
+      </div>
+      <div class="bg-gray-50 border p-2 rounded">
+        <p class="text-gray-500">Límite Superior</p>
+        <p id="stat-high-unit" class="font-medium text-green-700">—</p>
+      </div>
+     <div class="bg-gray-50 border p-2 rounded">
+        <p class="text-gray-500">Valor Adoptado</p>
+        <select id="select-adopted-unit" class="w-full p-1 text-green-700"></select>
       </div>
 
-      <!-- Indicadores Generales -->
-      <div class="space-y-4">
-        <div class="bg-green-50 border border-green-200 p-4 rounded">
-          <p class="text-sm text-gray-600">Total Ofertas</p>
-          <h3 class="text-2xl font-bold text-green-800">18,732</h3>
-        </div>
-        <div class="grid grid-cols-2 gap-3 text-sm">
-          <div class="bg-gray-100 p-3 rounded">
-            <p class="text-gray-500">Venta</p>
-            <p class="font-semibold text-green-700">10,455</p>
-          </div>
-          <div class="bg-gray-100 p-3 rounded">
-            <p class="text-gray-500">Arriendo</p>
-            <p class="font-semibold text-green-700">8,277</p>
-          </div>
-          <div class="bg-gray-100 p-3 rounded">
-            <p class="text-gray-500">Mín. Venta</p>
-            <p class="text-green-700 font-medium">$145.000.000</p>
-          </div>
-          <div class="bg-gray-100 p-3 rounded">
-            <p class="text-gray-500">Prom. m² Venta</p>
-            <p class="text-green-700 font-medium">$4.350.000</p>
-          </div>
-          <div class="bg-gray-100 p-3 rounded">
-            <p class="text-gray-500">Mín. Arriendo</p>
-            <p class="text-green-700 font-medium">$650.000</p>
-          </div>
-          <div class="bg-gray-100 p-3 rounded">
-            <p class="text-gray-500">Prom. m² Arriendo</p>
-            <p class="text-green-700 font-medium">$30.500</p>
-          </div>
-        </div>
-      </div>
 
-      <!-- Gráfico de Barras -->
-      <div>
-        <h3 class="text-sm font-bold mb-2">Ofertas por Tipo</h3>
-        <canvas id="chart-ofertas" height="200"></canvas>
+      <div class="bg-gray-100 p-3 rounded">
+        <p class="text-gray-500">Promedio</p>
+        <p id="stat-prom" class="text-green-700 font-medium">—</p>
       </div>
+    </div>
+  </div>
 
-      <!-- Estadísticas Avanzadas -->
-      <div class="space-y-3">
-        <div class="bg-yellow-50 border border-yellow-200 p-3 rounded">
-          <p class="text-sm text-gray-600">Municipio con mayor oferta</p>
-          <h3 class="font-bold text-yellow-800">Bogotá D.C.</h3>
-        </div>
-        <div class="bg-blue-50 border border-blue-200 p-3 rounded">
-          <p class="text-sm text-gray-600">Mayor Precio m² Venta</p>
-          <h3 class="font-bold text-blue-800">$12.500.000</h3>
-        </div>
-        <div class="bg-red-50 border border-red-200 p-3 rounded">
-          <p class="text-sm text-gray-600">Mayor Precio m² Arriendo</p>
-          <h3 class="font-bold text-red-800">$85.000</h3>
-        </div>
-      </div>
-    </aside>
+  <!-- Estadísticas Avanzadas -->
+  <div class="space-y-3">
+    <div class="bg-yellow-50 border border-yellow-200 p-3 rounded">
+      <p class="text-sm text-gray-600">Municipio con mayor oferta</p>
+      <h3 id="stat-top-municipio" class="font-bold text-yellow-800">—</h3>
+    </div>
+    <div class="bg-blue-50 border border-blue-200 p-3 rounded">
+      <p class="text-sm text-gray-600">Mayor Precio m² Venta</p>
+      <h3 id="stat-max-venta-m2" class="font-bold text-blue-800">—</h3>
+    </div>
+    <div class="bg-red-50 border border-red-200 p-3 rounded">
+      <p class="text-sm text-gray-600">Mayor Precio m² Arriendo</p>
+      <h3 id="stat-max-arriendo-m2" class="font-bold text-red-800">—</h3>
+    </div>
+  </div>
+</aside>
+ <!-- Mapa central + overlays para exportación -->
+  <div id="mapWrapper" class="flex-1 relative pr-[140px]">
+    <!-- Logo empresa (oculto hasta la captura) -->
+    <img
+      id="mapLogo"
+      src="logo.png"
+      alt="Logo Empresa"
+      hidden
+      class="absolute top-4 left-4 w-24 z-50 pointer-events-none"
+    >
+
+    <!-- Panel de estadísticas (oculto hasta la captura) -->
+    <div
+      id="mapStats"
+      hidden
+      class="absolute bottom-4 right-4 bg-white bg-opacity-90
+             p-3 rounded shadow text-sm z-50 pointer-events-none"
+    ></div>
+
+    <!-- DIV donde renderiza Leaflet -->
+    <div id="map" class="absolute inset-0 z-0"></div>
+  </div>
 
    <!-- Mapa central -->
  <!-- ========== COLUMNA PRINCIPAL (Mapa + Botones) ========== -->
@@ -124,6 +157,11 @@
         class="flex-1 w-full bg-green-600 hover:bg-green-700
                text-white text-lg font-semibold px-4 py-2 text-center"
       >➕ Agregar Inmuebles</button>
+        <button
+        id="filtros"
+        class="flex-1 w-full bg-blue-600 hover:bg-green-700
+               text-white text-lg font-semibold px-4 py-2 text-center"
+      >⚙️ Filtros</button>
       <button
         id="btn-salida-grafica"
         class="flex-1 w-full bg-purple-600 hover:bg-purple-700
@@ -133,75 +171,92 @@
   </div>
 
   <!-- ========== COLUMNA DE FILTROS ========== -->
-  <aside
-    class="w-full md:w-[340px] md:mr-[140px]
-           bg-white border-l border-gray-200
-           overflow-y-auto p-6 space-y-6 text-[17px]"
-  >
-    <button
-      id="closeSidebarIzq"
-      class="md:hidden absolute top-4 right-4 text-gray-500"
-    >×</button>
-    <h2 class="text-lg font-bold text-green-700">Filtros y Cálculos</h2>
-    <form class="space-y-4 text-sm">
-      <div>
-        <label class="block font-semibold text-gray-700">Tiempo</label>
-        <select class="w-full border border-gray-300 p-2 rounded">
-          <option>1 - 6 Meses</option>
-          <option>6 - 12 Meses</option>
-          <option>Mayor a 12 Meses</option>
-        </select>
-      </div>
-      <div>
-        <label class="block font-semibold text-gray-700">ENTIDAD</label>
-        <select class="w-full border border-gray-300 p-2 rounded">
-          <option>Avaluo Banco agrario</option>
-          <option>Avaluo SAE</option>
-          <option>Oferta</option>
-        </select>
-      </div>
-      <div>
-        <label class="block font-semibold text-gray-700">Tipo de Inmueble</label>
-        <select class="w-full border border-gray-300 p-2 rounded">
-          <option>Casa</option>
-          <option>Apartamento</option>
-          <option>Oficina</option>
-          <option>Local</option>
-        </select>
-      </div>
-      <div>
-        <label class="block font-semibold text-gray-700">Precio m² (COP)</label>
-        <div class="flex gap-2">
-          <input type="number" placeholder="Desde" class="w-1/2 border p-2 rounded"/>
-          <input type="number" placeholder="Hasta" class="w-1/2 border p-2 rounded"/>
-        </div>
-      </div>
-      <div>
-        <label class="block font-semibold text-gray-700">Área m²</label>
-        <div class="flex gap-2">
-          <input type="number" placeholder="Mín" class="w-1/2 border p-2 rounded"/>
-          <input type="number" placeholder="Máx" class="w-1/2 border p-2 rounded"/>
-        </div>
-      </div>
-      <div>
-        <label class="block font-semibold text-gray-700">Estrato</label>
-        <select class="w-full border border-gray-300 p-2 rounded">
-          <option>Todos</option>
-          <option>1</option>
-          <option>2</option>
-          <option>3</option>
-          <option>4</option>
-          <option>5</option>
-          <option>6</option>
-        </select>
-      </div>
-      <button class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded">
-        Aplicar Filtros
-      </button>
-    </form>
-  </aside>
+  
 
   <!-- ========== PANEL “Agregar Inmueble” ========== -->
+<!-- Panel lateral de Filtros y Cálculos -->
+<div
+  id="panelFiltros"
+  class="fixed inset-0 md:static md:w-[360px]
+           bg-white border-l border-gray-300 p-6
+           overflow-y-auto space-y-4 hidden text-[17px] z-50"
+>
+  <div class="flex justify-between items-center mb-4">
+    <h2 class="text-lg font-bold text-green-700">Filtros y Cálculos</h2>
+    <button
+      id="cerrarFiltros"
+      class="text-gray-500 hover:text-gray-700 text-2xl"
+    >&times;</button>
+  </div>
+
+  <form id="form-filtros" class="space-y-4 text-sm">
+    <div>
+      <label class="block font-semibold text-gray-700">Tiempo</label>
+      <select class="w-full border border-gray-300 p-2 rounded">
+        <option>1 - 6 Meses</option>
+        <option>6 - 12 Meses</option>
+        <option>Mayor a 12 Meses</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="block font-semibold text-gray-700">ENTIDAD</label>
+      <select class="w-full border border-gray-300 p-2 rounded">
+        <option>Avaluo Banco agrario</option>
+        <option>Avaluo SAE</option>
+        <option>Oferta</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="block font-semibold text-gray-700">Tipo de Inmueble</label>
+      <select class="w-full border border-gray-300 p-2 rounded">
+        <option>Casa</option>
+        <option>Apartamento</option>
+        <option>Oficina</option>
+        <option>Local</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="block font-semibold text-gray-700">Precio m² (COP)</label>
+      <div class="flex gap-2">
+        <input type="number" placeholder="Desde" class="w-1/2 border p-2 rounded"/>
+        <input type="number" placeholder="Hasta" class="w-1/2 border p-2 rounded"/>
+      </div>
+    </div>
+
+    <div>
+      <label class="block font-semibold text-gray-700">Área m²</label>
+      <div class="flex gap-2">
+        <input type="number" placeholder="Mín" class="w-1/2 border p-2 rounded"/>
+        <input type="number" placeholder="Máx" class="w-1/2 border p-2 rounded"/>
+      </div>
+    </div>
+
+    <div>
+      <label class="block font-semibold text-gray-700">Estrato</label>
+      <select class="w-full border border-gray-300 p-2 rounded">
+        <option>Todos</option>
+        <option>1</option>
+        <option>2</option>
+        <option>3</option>
+        <option>4</option>
+        <option>5</option>
+        <option>6</option>
+      </select>
+    </div>
+
+    <!-- Si quieres, aquí puedes añadir un botón de Aplicar -->
+    <button type="button"
+            id="aplicarFiltros"
+            class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded">
+      Aplicar Filtros
+    </button>
+  </form>
+</div>
+
+
   <div
     id="panelFormulario"
     class="fixed inset-0 md:static md:w-[360px]
@@ -373,41 +428,75 @@
       const num = Number(v) || 0;
       return num.toLocaleString('es-CO');
     };
+  // crear y exponer la capa de ofertas
+  window.ofertasLayer = L.featureGroup().addTo(map);
    // — definir EPSG:3116 ANTES de usar proj4() —
   proj4.defs("EPSG:3116",
     "+proj=tmerc +lat_0=4.5962004166667 +lon_0=-74.077507916667 " +
     "+k=1 +x_0=1000000 +y_0=1000000 +ellps=GRS80 +units=m +no_defs"
   );
     // ————— 3) Cargar ofertas guardadas al iniciar —————
-    fetch('/api/ofertas')
-      .then(res => res.ok ? res.json() : Promise.reject(res.status))
-      .then(ofertas => {
-        ofertas.forEach(oferta => {
-          if (oferta.poligono && oferta.Latitud == null) {
-            const url = oferta.poligono;
-            const ext = url.split('.').pop().toLowerCase();
-            if (ext === 'zip') {
-              fetch(url).then(r => r.arrayBuffer())
-                .then(buf => shp(buf))
-                .then(geojson => {
-                  L.geoJSON(geojson, {
-                    onEachFeature: (f, lyr) => lyr.bindPopup(generarPopupHTML(oferta))
-                  }).addTo(map);
-                });
-            } else {
-              omnivore[ext==='kmz'?'kmz':'kml'](url).addTo(map)
-                .on('ready', function(){
-                  this.eachLayer(l => l.bindPopup(generarPopupHTML(oferta)));
-                });
+   // ————— 3) Cargar ofertas guardadas al iniciar —————
+fetch('/api/ofertas')
+  .then(res => res.ok ? res.json() : Promise.reject(res.status))
+  .then(ofertas => {
+    // 3.1 Limpiar capa antes de recargar
+    ofertasLayer.clearLayers();
+
+    ofertas.forEach(oferta => {
+      // 3.2 Polígonos (KML/KMZ/ZIP → GeoJSON)
+      if (oferta.poligono && oferta.Latitud == null) {
+        const url = oferta.poligono;
+        const ext = url.split('.').pop().toLowerCase();
+
+        // Obtener GeoJSON desde shp.js
+        fetch(url).then(r => r.arrayBuffer())
+          .then(buf => shp(buf))
+          .then(geojson => {
+            L.geoJSON(geojson, {
+              onEachFeature: (feature, lyr) => {
+                // 3.2.1 Bind popup
+                lyr.bindPopup(generarPopupHTML(oferta));
+                // 3.2.2 Asignar feature para cálculos
+                lyr.feature = {
+                  geometry: feature.geometry,
+                  properties: oferta
+                };
+                // 3.2.3 Añadir a la capa de ofertas
+                ofertasLayer.addLayer(lyr);
+              }
+            });
+          })
+          .catch(err => console.error('Error procesando polígono', err));
+
+      // 3.3 Puntos (Latitud/Longitud)
+      }   else if (oferta.Latitud != null && oferta.Longitud != null) {
+        const marker = L.marker([oferta.Latitud, oferta.Longitud])
+          .bindPopup(generarPopupHTML(oferta))
+          .bindTooltip(
+            `ID: ${oferta.ID}`, {
+              permanent: true,
+              direction: 'top',
+              offset: [0, -8],
+              className: 'tooltip-id'
             }
-          } else if (oferta.Latitud != null && oferta.Longitud != null) {
-            L.marker([oferta.Latitud, oferta.Longitud])
-              .addTo(map)
-              .bindPopup(generarPopupHTML(oferta));
-          }
-        });
-      })
-      .catch(err => console.error('Error cargando ofertas:', err));
+          );
+        marker.feature = { /* … */ };
+        ofertasLayer.addLayer(marker);
+
+        // 3.3.1 Asignar feature para cálculos
+        marker.feature = {
+          geometry: { type: 'Point', coordinates: [oferta.Longitud, oferta.Latitud] },
+          properties: oferta
+        };
+
+        // 3.3.2 Añadir a la capa de ofertas
+        ofertasLayer.addLayer(marker);
+      }
+    });
+
+  })
+  .catch(err => console.error('Error cargando ofertas:', err));
 
     // ————— 4) UI: abrir/ocultar formulario —————
     const abrirBtn  = document.getElementById('abrirFormulario');
@@ -415,20 +504,8 @@
     const panel     = document.getElementById('panelFormulario');
     abrirBtn.addEventListener('click',  () => panel.classList.remove('hidden'));
     cerrarBtn.addEventListener('click', () => panel.classList.add('hidden'));
-
-    // ————— 5) Chart.js —————
-    new Chart(document.getElementById('chart-ofertas').getContext('2d'), {
-      type: 'bar',
-      data: {
-        labels: ['Casa','Apto','Oficina','Local'],
-        datasets: [{ data: [5234,9432,712,1354] }]
-      },
-      options: {
-        plugins: { legend: { display: false } },
-        scales:  { y: { beginAtZero: true } }
-      }
-    });
-
+    
+    
     // ————— 6) Lógica del formulario —————
     const tipoSelect = document.getElementById('entidad');
     const campoLat   = document.getElementById('latitud');
@@ -689,7 +766,25 @@
     });
   }
 </script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const openBtn  = document.getElementById('filtros');
+    const panel    = document.getElementById('panelFiltros');
+    const closeBtn = document.getElementById('cerrarFiltros');
+
+    openBtn.addEventListener('click', () => {
+      panel.classList.remove('hidden');
+    });
+
+    closeBtn.addEventListener('click', () => {
+      panel.classList.add('hidden');
+    });
+  });
+</script>
 <script src="normas.js"></script>
+<script src="calculosmercado.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="exportMap.js" defer></script>
 
 </body>
 </html>
