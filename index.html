@@ -184,7 +184,7 @@
   <form id="form-filtros" class="space-y-4 text-sm">
     <div>
       <label class="block font-semibold text-gray-700">Tiempo</label>
-      <select class="w-full border border-gray-300 p-2 rounded">
+      <select id="filtro-tiempo" class="w-full border border-gray-300 p-2 rounded">
         <option>1 - 6 Meses</option>
         <option>6 - 12 Meses</option>
         <option>Mayor a 12 Meses</option>
@@ -193,7 +193,7 @@
 
     <div>
       <label class="block font-semibold text-gray-700">ENTIDAD</label>
-      <select class="w-full border border-gray-300 p-2 rounded">
+      <select id="filtro-entidad" class="w-full border border-gray-300 p-2 rounded">
         <option>Avaluo Banco agrario</option>
         <option>Avaluo SAE</option>
         <option>Oferta</option>
@@ -202,7 +202,7 @@
 
     <div>
       <label class="block font-semibold text-gray-700">Tipo de Inmueble</label>
-      <select class="w-full border border-gray-300 p-2 rounded">
+      <select id="filtro-tipo" class="w-full border border-gray-300 p-2 rounded">
         <option>Casa</option>
         <option>Apartamento</option>
         <option>Oficina</option>
@@ -213,22 +213,22 @@
     <div>
       <label class="block font-semibold text-gray-700">Precio m² (COP)</label>
       <div class="flex gap-2">
-        <input type="number" placeholder="Desde" class="w-1/2 border p-2 rounded"/>
-        <input type="number" placeholder="Hasta" class="w-1/2 border p-2 rounded"/>
+        <input id="precio-min" type="number" placeholder="Desde" class="w-1/2 border p-2 rounded"/>
+        <input id="precio-max" type="number" placeholder="Hasta" class="w-1/2 border p-2 rounded"/>
       </div>
     </div>
 
     <div>
       <label class="block font-semibold text-gray-700">Área m²</label>
       <div class="flex gap-2">
-        <input type="number" placeholder="Mín" class="w-1/2 border p-2 rounded"/>
-        <input type="number" placeholder="Máx" class="w-1/2 border p-2 rounded"/>
+        <input id="area-min" type="number" placeholder="Mín" class="w-1/2 border p-2 rounded"/>
+        <input id="area-max" type="number" placeholder="Máx" class="w-1/2 border p-2 rounded"/>
       </div>
     </div>
 
     <div>
       <label class="block font-semibold text-gray-700">Estrato</label>
-      <select class="w-full border border-gray-300 p-2 rounded">
+      <select id="filtro-estrato" class="w-full border border-gray-300 p-2 rounded">
         <option>Todos</option>
         <option>1</option>
         <option>2</option>
@@ -420,6 +420,7 @@
     };
     // Crear y exponer la capa de ofertas
     window.ofertasLayer = L.featureGroup().addTo(map);
+    window.ofertaLayers = []; // almacenará todas las capas individuales
     // Definir EPSG:3116 antes de usar proj4()
     proj4.defs("EPSG:3116",
       "+proj=tmerc +lat_0=4.5962004166667 +lon_0=-74.077507916667 " +
@@ -431,6 +432,7 @@
       .then(ofertas => {
         // Limpiar capa antes de recargar
         ofertasLayer.clearLayers();
+        window.ofertaLayers = [];
 
         ofertas.forEach(oferta => {
           // Polígonos (KML/KMZ/ZIP → GeoJSON)
@@ -451,8 +453,9 @@
                       geometry: feature.geometry,
                       properties: oferta
                     };
-                    // Añadir a la capa de ofertas
+                    // Añadir a la capa de ofertas y registrar
                     ofertasLayer.addLayer(lyr);
+                    window.ofertaLayers.push({ layer: lyr, properties: oferta });
                   }
                 });
               })
@@ -470,17 +473,14 @@
                   className: 'tooltip-id'
                 }
               );
-            marker.feature = { /* … */ };
-            ofertasLayer.addLayer(marker);
 
-            // Asignar feature para cálculos
             marker.feature = {
               geometry: { type: 'Point', coordinates: [oferta.Longitud, oferta.Latitud] },
               properties: oferta
             };
 
-            // Añadir a la capa de ofertas
             ofertasLayer.addLayer(marker);
+            window.ofertaLayers.push({ layer: marker, properties: oferta });
           }
         });
 
@@ -779,6 +779,7 @@
   });
 </script>
 <script src="normas.js"></script>
+<script src="filtros.js" defer></script>
 <script src="calculosmercado.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="exportMap.js" defer></script>

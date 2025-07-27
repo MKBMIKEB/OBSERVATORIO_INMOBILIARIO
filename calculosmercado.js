@@ -152,7 +152,9 @@ function updateSidebarStats() {
   }
 
   console.groupEnd();
-} 
+  // Exponer para que otros scripts actualicen los cálculos
+  window.updateSidebarStats = updateSidebarStats;
+}
 
     // 6) enganchar eventos
     map.on('moveend zoomend', updateSidebarStats);
