@@ -28,7 +28,6 @@
   <script src="https://unpkg.com/shpjs@3.4.1/dist/shp.min.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet-distortableimage/dist/leaflet.distortableimage.css">
  
-
 </head>
 <body class="font-sans text-base">
   <button id="toggleSidebarIzq" class="fixed top-4 left-4 z-60 md:hidden bg-green-600 text-white p-2 rounded">☰</button>
@@ -88,7 +87,6 @@
         <select id="select-adopted-unit" class="w-full p-1 text-green-700"></select>
       </div>
 
-
       <div class="bg-gray-100 p-3 rounded">
         <p class="text-gray-500">Promedio</p>
         <p id="stat-prom" class="text-green-700 font-medium">—</p>
@@ -135,11 +133,7 @@
     <div id="map" class="absolute inset-0 z-0"></div>
   </div>
 
-   <!-- Mapa central -->
- <!-- ========== COLUMNA PRINCIPAL (Mapa + Botones) ========== -->
-  <div class="flex-1 relative pr-[140px]">
-    <!-- Mapa -->
-    <div id="map" class="absolute inset-0 h-64 md:h-full z-0"></div>
+   <!-- ========== COLUMNA PRINCIPAL (Mapa + Botones) ========== -->
 
     <!-- Barra fija de botones a la derecha -->
     <div
@@ -170,16 +164,14 @@
     </div>
   </div>
 
-  <!-- ========== COLUMNA DE FILTROS ========== -->
-  
-
-  <!-- ========== PANEL “Agregar Inmueble” ========== -->
+ <!-- ========== PANEL “Agregar Inmueble” y “Filtros” ========== -->
 <!-- Panel lateral de Filtros y Cálculos -->
 <div
   id="panelFiltros"
-  class="fixed inset-0 md:static md:w-[360px]
-           bg-white border-l border-gray-300 p-6
-           overflow-y-auto space-y-4 hidden text-[17px] z-50"
+  class="fixed top-0 right-0 h-full w-full md:w-[360px]
+            bg-white border-l border-gray-300 p-6
+            overflow-y-auto transform translate-x-full
+            transition-transform duration-300 z-50"
 >
   <div class="flex justify-between items-center mb-4">
     <h2 class="text-lg font-bold text-green-700">Filtros y Cálculos</h2>
@@ -259,9 +251,9 @@
 
   <div
     id="panelFormulario"
-    class="fixed inset-0 md:static md:w-[360px]
+    class="fixed top-0 right-0 h-full w-full md:w-[360px]
            bg-white border-l border-gray-300 p-6
-           overflow-y-auto space-y-4 hidden text-[17px] z-50"
+           overflow-y-auto space-y-4 transform translate-x-full transition-transform duration-300 text-[17px] z-50"
   >
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-lg font-bold text-green-700">Agregar Inmueble</h2>
@@ -386,9 +378,9 @@
     <form id="form-norma" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4" enctype="multipart/form-data">
       <input type="text" id="norma-titulo" name="titulo" placeholder="Título" class="border p-2 rounded" required/>
       <input type="number" id="norma-ano" name="ano" placeholder="Año" class="border p-2 rounded" required/>
-      <input type="text" id="norma-decretos" name="decretos" placeholder="Decretos" class="border p-2 rounded" required/>
+      <input type="text" id "norma-decretos" name="decretos" placeholder="Decretos" class="border p-2 rounded" required/>
       <input type="text" id="norma-departamento" name="departamento" placeholder="Departamento" class="border p-2 rounded" required/>
-      <input type="text" id="norma-municipio" name="municipio" placeholder="Municipio" class="border p-2 rounded" required/>
+      <input type="text" id="norma-municipio" name="municipio" placeholder "Municipio" class="border p-2 rounded" required/>
       <input type="file" id="norma-pdf"   name="archivo" accept="application/pdf" class="border p-2 rounded" required/>
       <input type="file" id="norma-plano" name="plano"  accept=".kml,.geojson,.zip,.tif,.tiff" class="border p-2 rounded" required/>
       <button type="submit" class="col-span-2 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded">
@@ -397,8 +389,6 @@
     </form>
   </div>
 
-
-<!-- Leaflet -->
 <!-- Leaflet -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-distortableimage/dist/leaflet.distortableimage.js"></script>
@@ -412,101 +402,105 @@
 <script src="https://unpkg.com/georaster-layer-for-leaflet"></script>
 
 <script>
-  // ————— Variables globales —————
+  // Variables globales
   let map;
   let overlayActual = null;
 
   window.addEventListener('DOMContentLoaded', () => {
-    // ————— 1) Inicializar el mapa —————
+    // Inicializar el mapa
     map = L.map('map').setView([4.711, -74.072], 6);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    // ————— 2) Helper para formatear COP —————
+    // Helper para formatear COP
     const formatPeso = v => {
       const num = Number(v) || 0;
       return num.toLocaleString('es-CO');
     };
-  // crear y exponer la capa de ofertas
-  window.ofertasLayer = L.featureGroup().addTo(map);
-   // — definir EPSG:3116 ANTES de usar proj4() —
-  proj4.defs("EPSG:3116",
-    "+proj=tmerc +lat_0=4.5962004166667 +lon_0=-74.077507916667 " +
-    "+k=1 +x_0=1000000 +y_0=1000000 +ellps=GRS80 +units=m +no_defs"
-  );
-    // ————— 3) Cargar ofertas guardadas al iniciar —————
-   // ————— 3) Cargar ofertas guardadas al iniciar —————
-fetch('/api/ofertas')
-  .then(res => res.ok ? res.json() : Promise.reject(res.status))
-  .then(ofertas => {
-    // 3.1 Limpiar capa antes de recargar
-    ofertasLayer.clearLayers();
+    // Crear y exponer la capa de ofertas
+    window.ofertasLayer = L.featureGroup().addTo(map);
+    // Definir EPSG:3116 antes de usar proj4()
+    proj4.defs("EPSG:3116",
+      "+proj=tmerc +lat_0=4.5962004166667 +lon_0=-74.077507916667 " +
+      "+k=1 +x_0=1000000 +y_0=1000000 +ellps=GRS80 +units=m +no_defs"
+    );
+    // Cargar ofertas guardadas al iniciar
+    fetch('/api/ofertas')
+      .then(res => res.ok ? res.json() : Promise.reject(res.status))
+      .then(ofertas => {
+        // Limpiar capa antes de recargar
+        ofertasLayer.clearLayers();
 
-    ofertas.forEach(oferta => {
-      // 3.2 Polígonos (KML/KMZ/ZIP → GeoJSON)
-      if (oferta.poligono && oferta.Latitud == null) {
-        const url = oferta.poligono;
-        const ext = url.split('.').pop().toLowerCase();
+        ofertas.forEach(oferta => {
+          // Polígonos (KML/KMZ/ZIP → GeoJSON)
+          if (oferta.poligono && oferta.Latitud == null) {
+            const url = oferta.poligono;
+            const ext = url.split('.').pop().toLowerCase();
 
-        // Obtener GeoJSON desde shp.js
-        fetch(url).then(r => r.arrayBuffer())
-          .then(buf => shp(buf))
-          .then(geojson => {
-            L.geoJSON(geojson, {
-              onEachFeature: (feature, lyr) => {
-                // 3.2.1 Bind popup
-                lyr.bindPopup(generarPopupHTML(oferta));
-                // 3.2.2 Asignar feature para cálculos
-                lyr.feature = {
-                  geometry: feature.geometry,
-                  properties: oferta
-                };
-                // 3.2.3 Añadir a la capa de ofertas
-                ofertasLayer.addLayer(lyr);
-              }
-            });
-          })
-          .catch(err => console.error('Error procesando polígono', err));
+            // Obtener GeoJSON desde shp.js
+            fetch(url).then(r => r.arrayBuffer())
+              .then(buf => shp(buf))
+              .then(geojson => {
+                L.geoJSON(geojson, {
+                  onEachFeature: (feature, lyr) => {
+                    // Bind popup
+                    lyr.bindPopup(generarPopupHTML(oferta));
+                    // Asignar feature para cálculos
+                    lyr.feature = {
+                      geometry: feature.geometry,
+                      properties: oferta
+                    };
+                    // Añadir a la capa de ofertas
+                    ofertasLayer.addLayer(lyr);
+                  }
+                });
+              })
+              .catch(err => console.error('Error procesando polígono', err));
 
-      // 3.3 Puntos (Latitud/Longitud)
-      }   else if (oferta.Latitud != null && oferta.Longitud != null) {
-        const marker = L.marker([oferta.Latitud, oferta.Longitud])
-          .bindPopup(generarPopupHTML(oferta))
-          .bindTooltip(
-            `ID: ${oferta.ID}`, {
-              permanent: true,
-              direction: 'top',
-              offset: [0, -8],
-              className: 'tooltip-id'
-            }
-          );
-        marker.feature = { /* … */ };
-        ofertasLayer.addLayer(marker);
+          // Puntos (Latitud/Longitud)
+          } else if (oferta.Latitud != null && oferta.Longitud != null) {
+            const marker = L.marker([oferta.Latitud, oferta.Longitud])
+              .bindPopup(generarPopupHTML(oferta))
+              .bindTooltip(
+                `ID: ${oferta.ID}`, {
+                  permanent: true,
+                  direction: 'top',
+                  offset: [0, -8],
+                  className: 'tooltip-id'
+                }
+              );
+            marker.feature = { /* … */ };
+            ofertasLayer.addLayer(marker);
 
-        // 3.3.1 Asignar feature para cálculos
-        marker.feature = {
-          geometry: { type: 'Point', coordinates: [oferta.Longitud, oferta.Latitud] },
-          properties: oferta
-        };
+            // Asignar feature para cálculos
+            marker.feature = {
+              geometry: { type: 'Point', coordinates: [oferta.Longitud, oferta.Latitud] },
+              properties: oferta
+            };
 
-        // 3.3.2 Añadir a la capa de ofertas
-        ofertasLayer.addLayer(marker);
-      }
-    });
+            // Añadir a la capa de ofertas
+            ofertasLayer.addLayer(marker);
+          }
+        });
 
-  })
-  .catch(err => console.error('Error cargando ofertas:', err));
+      })
+      .catch(err => console.error('Error cargando ofertas:', err));
 
-    // ————— 4) UI: abrir/ocultar formulario —————
+    // UI: abrir/ocultar formulario
     const abrirBtn  = document.getElementById('abrirFormulario');
     const cerrarBtn = document.getElementById('cerrarFormulario');
     const panel     = document.getElementById('panelFormulario');
-    abrirBtn.addEventListener('click',  () => panel.classList.remove('hidden'));
-    cerrarBtn.addEventListener('click', () => panel.classList.add('hidden'));
-    
-    
-    // ————— 6) Lógica del formulario —————
+    abrirBtn.addEventListener('click',  () => {
+      panel.classList.remove('translate-x-full');
+      panel.classList.add('translate-x-0');
+    });
+    cerrarBtn.addEventListener('click', () => {
+      panel.classList.remove('translate-x-0');
+      panel.classList.add('translate-x-full');
+    });
+
+    // Lógica del formulario
     const tipoSelect = document.getElementById('entidad');
     const campoLat   = document.getElementById('latitud');
     const campoLon   = document.getElementById('longitud');
@@ -536,7 +530,7 @@ fetch('/api/ofertas')
       listaUni.appendChild(div);
     });
 
-    // ————— 7) Envío del formulario —————
+    // Envío del formulario
     const form = document.getElementById('form-oferta');
     form.addEventListener('submit', async e => {
       e.preventDefault();
@@ -553,7 +547,7 @@ fetch('/api/ofertas')
         if (!ct.includes('application/json')) throw new Error('Respuesta no JSON');
         const { oferta } = await res.json();
 
-        // — Centrar y dibujar en el mapa
+        // Centrar y dibujar en el mapa
         if (oferta.poligono && oferta.Latitud == null) {
           const url = oferta.poligono;
           const ext = url.split('.').pop().toLowerCase();
@@ -582,7 +576,8 @@ fetch('/api/ofertas')
         }
 
         form.reset();
-        panel.classList.add('hidden');
+        panel.classList.remove('translate-x-0');
+        panel.classList.add('translate-x-full');
         listaUni.innerHTML = '';
         uniCont.classList.add('hidden');
         alert('✅ Oferta guardada y centrada en el mapa');
@@ -592,11 +587,11 @@ fetch('/api/ofertas')
       }
     });
 
-    // ————— 8) Fecha por defecto —————
+    // Fecha por defecto
     document.getElementById('fecha-registro').value =
       new Date().toISOString().split('T')[0];
 
-    // ————— 9) Cargar capas de imagen guardadas —————
+    // Cargar capas de imagen guardadas
     fetch('/api/capas-imagen')
       .then(res => res.json())
       .then(capas => {
@@ -608,7 +603,7 @@ fetch('/api/ofertas')
       })
       .catch(err => console.error('❌ Error cargando capas georreferenciadas:', err));
 
-    // ————— 11) Función para generar el HTML del popup —————
+    // Función para generar el HTML del popup
     function generarPopupHTML(d) {
       const galeria = (d.imagenes||[]).map(src => `
         <div class="inline-block mr-2 mb-2">
@@ -647,16 +642,16 @@ fetch('/api/ofertas')
     }
   }); // fin DOMContentLoaded
 
-  // ————— 12) Botones y estados fuera del callback (imagen libre) —————
+  // Botones y estados fuera del callback (imagen libre)
   const btnAgregarImagen = document.getElementById('btn-agregar-imagen');
   const inputImagen      = document.getElementById('input-imagen-georef');
   const btnGuardarCapa   = document.getElementById('btn-guardar-capa');
 
-  btnAgregarImagen.addEventListener('click', () => {
-    inputImagen.click();
+  btnAgregarImagen?.addEventListener('click', () => {
+    inputImagen?.click();
   });
 
-  inputImagen.addEventListener('change', e => {
+  inputImagen?.addEventListener('change', e => {
     const file = e.target.files[0];
     if (!file || !map) return;
     const reader = new FileReader();
@@ -682,12 +677,12 @@ fetch('/api/ofertas')
       }).addTo(map);
 
       overlayActual.editing.enable();
-      btnGuardarCapa.classList.remove('hidden');
+      btnGuardarCapa?.classList.remove('hidden');
     };
     reader.readAsDataURL(file);
   });
 
-  btnGuardarCapa.addEventListener('click', () => {
+  btnGuardarCapa?.addEventListener('click', () => {
     if (!overlayActual) return;
     const corners     = overlayActual._corners.map(c => [c.lat, c.lng]);
     const imageDataURL= overlayActual._url;
@@ -702,7 +697,7 @@ fetch('/api/ofertas')
       })
       .then(() => {
         alert('✅ Capa guardada correctamente');
-        btnGuardarCapa.classList.add('hidden');
+        btnGuardarCapa?.classList.add('hidden');
       })
       .catch(err => {
         console.error(err);
@@ -725,7 +720,7 @@ fetch('/api/ofertas')
     panelNorma.classList.remove('translate-x-0');
     panelNorma.classList.add('translate-x-full');
   });
-  formNorma.addEventListener('submit', e => {
+  formNorma?.addEventListener('submit', e => {
     e.preventDefault();
 
     const titulo = document.getElementById('norma-titulo').value;
@@ -773,11 +768,13 @@ fetch('/api/ofertas')
     const closeBtn = document.getElementById('cerrarFiltros');
 
     openBtn.addEventListener('click', () => {
-      panel.classList.remove('hidden');
+      panel.classList.remove('translate-x-full');
+      panel.classList.add('translate-x-0');
     });
 
     closeBtn.addEventListener('click', () => {
-      panel.classList.add('hidden');
+      panel.classList.remove('translate-x-0');
+      panel.classList.add('translate-x-full');
     });
   });
 </script>
