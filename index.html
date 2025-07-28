@@ -426,6 +426,28 @@
       "+proj=tmerc +lat_0=4.5962004166667 +lon_0=-74.077507916667 " +
       "+k=1 +x_0=1000000 +y_0=1000000 +ellps=GRS80 +units=m +no_defs"
     );
+    // ── Utilidad para reproyectar si vienen en coordenadas 3116 ───────────
+    function normalizeGeoJSON(gj) {
+      if (!gj || !gj.features || !gj.features.length) return gj;
+      const coord = gj.features[0].geometry.coordinates;
+      const first = Array.isArray(coord[0]) ? coord[0][0] : coord;
+      const x = first[0], y = first[1];
+      if (Math.abs(x) > 180 || Math.abs(y) > 90) {
+        const convert = c => {
+          if (typeof c[0] === 'number') {
+            const [lon, lat] = proj4('EPSG:3116', 'EPSG:4326', c);
+            return [lon, lat];
+          }
+          return c.map(convert);
+        };
+        gj = JSON.parse(JSON.stringify(gj));
+        gj.features.forEach(f => {
+          f.geometry.coordinates = convert(f.geometry.coordinates);
+        });
+      }
+      return gj;
+    }
+
     // Cargar ofertas guardadas al iniciar
     fetch('/api/ofertas')
       .then(res => res.ok ? res.json() : Promise.reject(res.status))
@@ -443,6 +465,7 @@
             // Obtener GeoJSON desde shp.js
             fetch(url).then(r => r.arrayBuffer())
               .then(buf => shp(buf))
+              .then(geojson => normalizeGeoJSON(geojson))
               .then(geojson => {
                 L.geoJSON(geojson, {
                   onEachFeature: (feature, lyr) => {
@@ -558,6 +581,7 @@
           if (ext === 'zip') {
             fetch(url).then(r=>r.arrayBuffer())
               .then(buf=>shp(buf))
+              .then(geojson=> normalizeGeoJSON(geojson))
               .then(geojson=>{
                 const layer = L.geoJSON(geojson,{ onEachFeature:(f,l)=>cb(l) }).addTo(map);
               });
