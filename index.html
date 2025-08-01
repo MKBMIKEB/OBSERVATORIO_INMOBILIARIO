@@ -36,7 +36,7 @@
   <div class="flex flex-col md:flex-row h-screen overflow-hidden">
 
     <!-- Sidebar Izquierda -->
-   <aside class="w-full md:w-80 bg-white border-r p-6 space-y-6 overflow-y-auto">
+   <aside id="sidebar-izq" class="fixed inset-y-0 left-0 w-64 transform -translate-x-full transition-transform duration-300 bg-white border-r p-6 space-y-6 overflow-y-auto z-40 md:relative md:translate-x-0 md:flex-shrink-0 md:w-80">
   <!-- Logo -->
   <div class="flex items-center gap-4">
     <img src="logo.png" alt="Logo" class="h-12" />
@@ -111,7 +111,7 @@
   </div>
 </aside>
  <!-- Mapa central + overlays para exportación -->
-  <div id="mapWrapper" class="flex-1 relative pr-[140px]">
+  <div id="mapWrapper" class="flex-1 relative md:pr-[140px]">
     <!-- Logo empresa (oculto hasta la captura) -->
     <img
       id="mapLogo"
@@ -137,9 +137,7 @@
 
     <!-- Barra fija de botones a la derecha -->
     <div
-      id="sidebar-botones"
-      class="fixed top-0 right-0 h-screen w-[140px]
-             bg-white border-l border-gray-300 z-30 shadow-md flex flex-col"
+      id="sidebar-botones" class="fixed top-0 right-0 h-screen w-[140px] bg-white border-l border-gray-300 z-30 shadow-md flex flex-col transform translate-x-full transition-transform duration-300 md:translate-x-0"
     >
       <button
         id="abrirNorma"
@@ -780,6 +778,20 @@
 </script>
 <script src="normas.js"></script>
 <script src="filtros.js" defer></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const btnIzq = document.getElementById('toggleSidebarIzq');
+    const btnDer = document.getElementById('toggleSidebarDer');
+    const sidebarIzq = document.getElementById('sidebar-izq');
+    const sidebarDer = document.getElementById('sidebar-botones');
+    btnIzq?.addEventListener('click', () => {
+      sidebarIzq.classList.toggle('-translate-x-full');
+    });
+    btnDer?.addEventListener('click', () => {
+      sidebarDer.classList.toggle('translate-x-full');
+    });
+  });
+</script>
 <script src="calculosmercado.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="exportMap.js" defer></script>
