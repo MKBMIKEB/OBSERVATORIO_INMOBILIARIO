@@ -36,7 +36,7 @@
   <div class="flex flex-col md:flex-row h-screen overflow-hidden">
 
     <!-- Sidebar Izquierda -->
-   <aside class="w-full md:w-80 bg-white border-r p-6 space-y-6 overflow-y-auto">
+  <aside class="w-full md:w-80 bg-white border-r p-6 space-y-6 overflow-y-auto fixed inset-y-0 left-0 transform -translate-x-full md:translate-x-0 transition-transform z-40 md:relative">
   <!-- Logo -->
   <div class="flex items-center gap-4">
     <img src="logo.png" alt="Logo" class="h-12" />
@@ -111,7 +111,7 @@
   </div>
 </aside>
  <!-- Mapa central + overlays para exportación -->
-  <div id="mapWrapper" class="flex-1 relative pr-[140px]">
+  <div id="mapWrapper" class="flex-1 relative pr-0 md:pr-[140px]">
     <!-- Logo empresa (oculto hasta la captura) -->
     <img
       id="mapLogo"
@@ -139,7 +139,8 @@
     <div
       id="sidebar-botones"
       class="fixed top-0 right-0 h-screen w-[140px]
-             bg-white border-l border-gray-300 z-30 shadow-md flex flex-col"
+             bg-white border-l border-gray-300 z-30 shadow-md flex flex-col
+             transform translate-x-full md:translate-x-0 transition-transform"
     >
       <button
         id="abrirNorma"
@@ -767,6 +768,11 @@
     const panel    = document.getElementById('panelFiltros');
     const closeBtn = document.getElementById('cerrarFiltros');
 
+    const toggleIzq = document.getElementById('toggleSidebarIzq');
+    const sidebarIzq = document.querySelector('aside');
+    const toggleDer = document.getElementById('toggleSidebarDer');
+    const sidebarDer = document.getElementById('sidebar-botones');
+
     openBtn.addEventListener('click', () => {
       panel.classList.remove('translate-x-full');
       panel.classList.add('translate-x-0');
@@ -775,6 +781,14 @@
     closeBtn.addEventListener('click', () => {
       panel.classList.remove('translate-x-0');
       panel.classList.add('translate-x-full');
+    });
+
+    toggleIzq.addEventListener('click', () => {
+      sidebarIzq.classList.toggle('-translate-x-full');
+    });
+
+    toggleDer.addEventListener('click', () => {
+      sidebarDer.classList.toggle('translate-x-full');
     });
   });
 </script>
