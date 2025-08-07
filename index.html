@@ -409,11 +409,31 @@
 
   window.addEventListener('DOMContentLoaded', () => {
     // Inicializar el mapa
-    map = L.map('map').setView([4.711, -74.072], 6);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
+    // Capas base
+const capaOSM = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap contributors'
+});
 
+const capaESRI = L.tileLayer(
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+  {
+    attribution: '© ESRI, Maxar, Earthstar Geographics'
+  }
+);
+
+// Inicializar mapa con ESRI por defecto
+map = L.map('map', {
+  center: [4.711, -74.072],
+  zoom: 6,
+  layers: [capaESRI]
+});
+
+// Control de capas (permite cambiar entre OSM y ESRI)
+const baseLayers = {
+  "🛰️ Satelital (ESRI)": capaESRI,
+  "🗺️ Callejero (OSM)": capaOSM
+};
+L.control.layers(baseLayers, null, { position: 'bottomleft' }).addTo(map);
     // Helper para formatear COP
     const formatPeso = v => {
       const num = Number(v) || 0;
