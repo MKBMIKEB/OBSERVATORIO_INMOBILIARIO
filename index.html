@@ -457,7 +457,7 @@ L.control.layers(baseLayers, null, { position: 'bottomleft' }).addTo(map);
 
         ofertas.forEach(oferta => {
           // Polígonos (KML/KMZ/ZIP → GeoJSON)
-          if (oferta.poligono && oferta.Latitud == null) {
+          if (oferta.poligono) {
             const url = oferta.poligono;
             const ext = url.split('.').pop().toLowerCase();
 
