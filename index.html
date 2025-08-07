@@ -447,6 +447,42 @@ L.control.layers(baseLayers, null, { position: 'bottomleft' }).addTo(map);
       "+proj=tmerc +lat_0=4.5962004166667 +lon_0=-74.077507916667 " +
       "+k=1 +x_0=1000000 +y_0=1000000 +ellps=GRS80 +units=m +no_defs"
     );
+
+    /**
+     * Renderiza un polígono en el mapa a partir de un archivo remoto.
+     * Soporta ZIP (Shapefile comprimido), KML y KMZ. Para agregar nuevos
+     * formatos en el futuro, detectar la extensión y convertir a GeoJSON
+     * antes de añadirlo a la capa objetivo.
+     * @param {string} url - Ruta del archivo del polígono.
+     * @param {object} oferta - Datos de la oferta para el popup/feature.
+     * @param {L.LayerGroup|L.Map} targetLayer - Capa o mapa donde se añade.
+     * @param {function} [onLayer] - Callback opcional con la capa creada.
+     */
+    function renderPoligono(url, oferta, targetLayer = ofertasLayer, onLayer) {
+      const ext = url.split('.').pop().toLowerCase();
+
+      const agregar = layer => {
+        layer.bindPopup(generarPopupHTML(oferta));
+        layer.feature = { geometry: layer.toGeoJSON().geometry, properties: oferta };
+        layer.addTo(targetLayer);
+        if (targetLayer === ofertasLayer) {
+          window.ofertaLayers.push({ layer, properties: oferta });
+        }
+        if (typeof onLayer === 'function') onLayer(layer);
+      };
+
+      if (ext === 'zip') {
+        fetch(url).then(r => r.arrayBuffer())
+          .then(buf => shp(buf))
+          .then(geojson => L.geoJSON(geojson).eachLayer(agregar))
+          .catch(err => console.error('Error procesando polígono', err));
+      } else if (ext === 'kml' || ext === 'kmz') {
+        omnivore[ext === 'kmz' ? 'kmz' : 'kml'](url)
+          .on('ready', function () { this.eachLayer(agregar); });
+      } else {
+        console.warn('Formato no soportado:', ext);
+      }
+    }
     // Cargar ofertas guardadas al iniciar
     fetch('/api/ofertas')
       .then(res => res.ok ? res.json() : Promise.reject(res.status))
@@ -456,31 +492,8 @@ L.control.layers(baseLayers, null, { position: 'bottomleft' }).addTo(map);
         window.ofertaLayers = [];
 
         ofertas.forEach(oferta => {
-          // Polígonos (KML/KMZ/ZIP → GeoJSON)
           if (oferta.poligono) {
-            const url = oferta.poligono;
-            const ext = url.split('.').pop().toLowerCase();
-
-            // Obtener GeoJSON desde shp.js
-            fetch(url).then(r => r.arrayBuffer())
-              .then(buf => shp(buf))
-              .then(geojson => {
-                L.geoJSON(geojson, {
-                  onEachFeature: (feature, lyr) => {
-                    // Bind popup
-                    lyr.bindPopup(generarPopupHTML(oferta));
-                    // Asignar feature para cálculos
-                    lyr.feature = {
-                      geometry: feature.geometry,
-                      properties: oferta
-                    };
-                    // Añadir a la capa de ofertas y registrar
-                    ofertasLayer.addLayer(lyr);
-                    window.ofertaLayers.push({ layer: lyr, properties: oferta });
-                  }
-                });
-              })
-              .catch(err => console.error('Error procesando polígono', err));
+            renderPoligono(oferta.poligono, oferta, ofertasLayer);
 
           // Puntos (Latitud/Longitud)
           } else if (oferta.Latitud != null && oferta.Longitud != null) {
@@ -570,30 +583,29 @@ L.control.layers(baseLayers, null, { position: 'bottomleft' }).addTo(map);
 
         // Centrar y dibujar en el mapa
         if (oferta.poligono && oferta.Latitud == null) {
-          const url = oferta.poligono;
-          const ext = url.split('.').pop().toLowerCase();
-          const cb  = layer => {
-            layer.bindPopup(generarPopupHTML(oferta)).openPopup();
+          renderPoligono(oferta.poligono, oferta, ofertasLayer, layer => {
+            layer.openPopup();
             map.fitBounds(layer.getBounds());
-          };
-          if (ext === 'zip') {
-            fetch(url).then(r=>r.arrayBuffer())
-              .then(buf=>shp(buf))
-              .then(geojson=>{
-                const layer = L.geoJSON(geojson,{ onEachFeature:(f,l)=>cb(l) }).addTo(map);
-              });
-          } else {
-            omnivore[ext==='kmz'?'kmz':'kml'](url).addTo(map)
-              .on('ready', function(){
-                this.eachLayer(l=>cb(l));
-              });
-          }
+          });
         } else if (oferta.Latitud != null) {
           const marker = L.marker([oferta.Latitud, oferta.Longitud])
-            .addTo(map)
             .bindPopup(generarPopupHTML(oferta))
+            .bindTooltip(
+              `ID: ${oferta.ID}`, {
+                permanent: true,
+                direction: 'top',
+                offset: [0, -8],
+                className: 'tooltip-id'
+              }
+            )
+            .addTo(ofertasLayer)
             .openPopup();
           map.setView([oferta.Latitud, oferta.Longitud], map.getZoom());
+          marker.feature = {
+            geometry: { type: 'Point', coordinates: [oferta.Longitud, oferta.Latitud] },
+            properties: oferta
+          };
+          window.ofertaLayers.push({ layer: marker, properties: oferta });
         }
 
         form.reset();
