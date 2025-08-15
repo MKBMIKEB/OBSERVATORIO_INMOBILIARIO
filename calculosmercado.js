@@ -32,6 +32,21 @@ window.addEventListener('DOMContentLoaded', () => {
     // 3) Estado de checkboxes
     const selectedIds = new Set();
 
+    // Cambia el estilo del icono o polígono según si está seleccionado
+    function setOfferHighlight(id, highlight) {
+      const entry = window.ofertaLayers.find(o => o.properties.ID === id);
+      if (!entry) return;
+      const layer = entry.layer;
+      if (typeof layer.setIcon === 'function') {
+        layer.setIcon(highlight ? window.selectedIcon : window.defaultIcon);
+      } else if (typeof layer.setStyle === 'function') {
+        layer.setStyle({
+          color: highlight ? 'green' : '#3388ff',
+          fillColor: highlight ? 'green' : '#3388ff'
+        });
+      }
+    }
+
     // 4) Render checklist
     function renderChecklist(visible) {
       console.log('renderChecklist → visible IDs:', visible.map(o => o.id));
@@ -43,22 +58,24 @@ window.addEventListener('DOMContentLoaded', () => {
         const chk = document.createElement('input');
         chk.type = 'checkbox';
         chk.value = o.id; chk.id = `offer-${o.id}`;
-        chk.classList.add('h-4','w-4','text-green-600','border-gray-300','rounded');
-        if (selectedIds.has(o.id)) chk.checked = true;
-        chk.addEventListener('change', e => {
-          if (e.target.checked) selectedIds.add(o.id);
-          else selectedIds.delete(o.id);
-          console.log('Checkbox change → selectedIds now:', Array.from(selectedIds));
-          updateSidebarStats();
+          chk.classList.add('h-4','w-4','text-green-600','border-gray-300','rounded');
+          if (selectedIds.has(o.id)) chk.checked = true;
+          chk.addEventListener('change', e => {
+            if (e.target.checked) selectedIds.add(o.id);
+            else selectedIds.delete(o.id);
+            console.log('Checkbox change → selectedIds now:', Array.from(selectedIds));
+            setOfferHighlight(o.id, e.target.checked);
+            updateSidebarStats();
+          });
+          const label = document.createElement('label');
+          label.htmlFor = chk.id;
+          label.classList.add('ml-2','text-sm','text-gray-700');
+          label.textContent = `Oferta #${o.id}`;
+          wrapper.append(chk, label);
+          container.appendChild(wrapper);
+          setOfferHighlight(o.id, selectedIds.has(o.id));
         });
-        const label = document.createElement('label');
-        label.htmlFor = chk.id;
-        label.classList.add('ml-2','text-sm','text-gray-700');
-        label.textContent = `Oferta #${o.id}`;
-        wrapper.append(chk, label);
-        container.appendChild(wrapper);
-      });
-    }
+      }
 
     // 5) Función principal: filtrar, calcular y actualizar DOM
 // 4) Función principal: filtrar, calcular y actualizar DOM
