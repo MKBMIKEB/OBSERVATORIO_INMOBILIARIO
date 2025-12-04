@@ -4,8 +4,6 @@ const cors    = require('cors');
 const fs      = require('fs');
 const path    = require('path');
 const sharp   = require('sharp');
-const JSZip   = require('jszip');
-
 
 const app = express();
 app.use(cors());
@@ -220,7 +218,7 @@ app.post(
   }
 );
 
-
+// ─── GET /api/normas ────────────────────────────────
 // ─── GET /api/normas ────────────────────────────────
 app.get('/api/normas', (req, res) => {
   try {
@@ -238,93 +236,12 @@ app.get('/api/normas', (req, res) => {
   }
 });
 
-// ─── GET /api/kmz/banco-agrario - KML SIN FILTROS ─────────────────────
-app.get('/api/kmz/banco-agrario', async (req, res) => {
-  console.log('🏛️ ===== PETICIÓN BANCO AGRARIO RECIBIDA =====');
-  console.log('🏛️ Timestamp:', new Date().toISOString());
-  console.log('🏛️ IP Cliente:', req.ip);
-  console.log('🏛️ User-Agent:', req.get('User-Agent'));
-
-  try {
-    const kmzPath = path.join(uploadsDir, 'RURALES_BANCO_AGRARIO.kmz');
-    console.log('🏛️ Buscando archivo en:', kmzPath);
-
-    if (!fs.existsSync(kmzPath)) {
-      console.log('❌ Archivo KMZ NO encontrado en:', kmzPath);
-      return res.status(404).json({ error: 'Archivo KMZ no encontrado' });
-    }
-
-    console.log('✅ Archivo KMZ encontrado, tamaño:', fs.statSync(kmzPath).size, 'bytes');
-
-    // Extraer KML directamente del KMZ
-    console.log('📦 Cargando archivo KMZ...');
-    const kmzData = fs.readFileSync(kmzPath);
-    console.log('📦 Archivo KMZ cargado en memoria');
-
-    const zip = await JSZip.loadAsync(kmzData);
-    console.log('📦 ZIP procesado, archivos encontrados:', Object.keys(zip.files));
-
-    const kmlFile = zip.file('doc.kml') || Object.values(zip.files).find(file => file.name.endsWith('.kml'));
-
-    if (!kmlFile) {
-      console.log('❌ No se encontró archivo KML dentro del KMZ');
-      console.log('❌ Archivos disponibles:', Object.keys(zip.files));
-      return res.status(500).json({ error: 'No se encontró archivo KML dentro del KMZ' });
-    }
-
-    console.log('✅ Archivo KML encontrado:', kmlFile.name);
-
-    // Obtener contenido KML sin modificaciones
-    console.log('📄 Extrayendo contenido KML...');
-    const kmlContent = await kmlFile.async('text');
-    console.log('✅ Contenido KML extraído, tamaño:', kmlContent.length, 'caracteres');
-
-    res.set({
-      'Content-Type': 'application/vnd.google-earth.kml+xml',
-      'Content-Disposition': 'inline; filename="banco_agrario_raw.kml"'
-    });
-
-    console.log('📤 Enviando respuesta KML al cliente...');
-    res.send(kmlContent);
-    console.log('✅ Respuesta KML enviada exitosamente');
-    console.log('🏛️ ===== FIN PETICIÓN BANCO AGRARIO =====\n');
-
-  } catch (err) {
-    console.error('❌ Error procesando KMZ:', err);
-    console.error('❌ Stack:', err.stack);
-    res.status(500).json({ error: 'Error al procesar KMZ' });
-  }
-});
-
-
-// ─── GET /api/kmz/info ──────────────────────────────
-app.get('/api/kmz/info', (req, res) => {
-  const kmzPath = path.join(uploadsDir, 'RURALES_BANCO_AGRARIO.kmz');
-  
-  if (!fs.existsSync(kmzPath)) {
-    return res.status(404).json({ error: 'Archivo KMZ no encontrado' });
-  }
-
-  const stats = fs.statSync(kmzPath);
-  
-  res.json({
-    nombre: 'RURALES_BANCO_AGRARIO.kmz',
-    tamaño: stats.size,
-    fechaModificacion: stats.mtime,
-    disponible: true,
-    descripcion: 'Datos rurales del Banco Agrario - Red de oficinas y cobertura rural'
-  });
-});
-
 
 // ─── Servir archivos estáticos (index.html, etc.) ────
 // (esto debe ir al final)
 app.use(express.static(path.join(__dirname)));
 
 // ─── Iniciar servidor ────────────────────────────────
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
-  console.log(`🌍 Entorno: ${process.env.NODE_ENV || 'development'}`);
-  console.log('🔍 Logs del Banco Agrario activados - FRONTEND INTEGRADO');
+app.listen(3000, () => {
+  console.log('🚀 Servidor corriendo en http://localhost:3000');
 });

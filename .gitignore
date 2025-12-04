@@ -1,54 +1,20 @@
-# Node modules
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Environment variables
 .env
-.env.local
-.env.production
-.env.development
-
-# Uploads y archivos temporales
-uploads/
 *.log
-*.tmp
-*.swp
+uploads/*
+!uploads/.gitkeep
 .DS_Store
-Thumbs.db
-
-# Azure
-.deployment
-local.settings.json
-
-# IDE
+*.swp
+*.swo
+*~
 .vscode/
 .idea/
-*.sublime-*
-
-# Build outputs
 dist/
 build/
-*.zip
-
-# Backups
-*_backup.*
-*_seguridad_*
-*.bak
-
-# OS
-.DS_Store
-Thumbs.db
-desktop.ini
-
-# Test coverage
-coverage/
-.nyc_output/
-
-# Secrets (NUNCA subir esto)
-*.pem
-*.key
-*.cert
-credentials.json
-secrets.json
+.cache/
+.backup/
+server-test.js
+server-simple.js
+index_backup.html
+index_seguridad_*.html
+.deployment
