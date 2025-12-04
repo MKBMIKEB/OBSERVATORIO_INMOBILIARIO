@@ -1,0 +1,111 @@
+/* ofertas-checklist.js
+   - Renderiza el checklist de ofertas (solo puntos)
+   - Cambia el color del marcador: azul ↔ amarillo según checkbox
+   - Requiere: Leaflet, window.ofertasLayer ya con los marcadores añadidos
+*/
+(function (global) {
+  if (!global.L) {
+    console.error("OfertasChecklist: Leaflet no está cargado.");
+    return;
+  }
+
+  // Íconos por defecto
+  const ICONS = {
+    azul: L.icon({
+      iconUrl: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+      iconSize: [32, 32],
+      iconAnchor: [16, 32]
+    }),
+    amarillo: L.icon({
+      iconUrl: "https://maps.google.com/mapfiles/ms/icons/yellow-dot.png",
+      iconSize: [32, 32],
+      iconAnchor: [16, 32]
+    })
+  };
+
+  // Indexa marcadores por ID (solo geometry Point)
+  function buildMarkersIndex(ofertasLayer) {
+    const idx = Object.create(null);
+    if (!ofertasLayer) return idx;
+
+    ofertasLayer.eachLayer(layer => {
+      const f = layer.feature;
+      if (!f || f.geometry?.type !== "Point") return;
+
+      // Ajusta aquí si tus propiedades usan otra clave (ID, Id, id, etc.)
+      const id =
+        String(
+          (f.properties && (f.properties.ID ?? f.properties.Id ?? f.properties.id)) ?? ""
+        );
+
+      if (id) idx[id] = layer;
+    });
+
+    return idx;
+  }
+
+  // Renderiza el checklist y vincula eventos de cambio de icono
+  function renderChecklist(ofertas, containerId, markersById, icons = ICONS) {
+    const cont = document.getElementById(containerId);
+    if (!cont) {
+      console.warn(`OfertasChecklist: no se encontró #${containerId}`);
+      return;
+    }
+
+    // Solo listamos ofertas con coordenadas (puntos)
+    const html = ofertas
+      .filter(o => o.Latitud != null && o.Longitud != null)
+      .map(
+        o => `
+      <label class="flex items-center gap-2 py-1">
+        <input type="checkbox" class="oferta-checkbox" data-id="${String(o.ID)}" checked>
+        <span>Oferta #${o.ID}</span>
+      </label>
+    `
+      )
+      .join("");
+
+    cont.innerHTML = html;
+
+    // Estado inicial: checked → amarillo
+    cont.querySelectorAll(".oferta-checkbox").forEach(cb => {
+      const id = String(cb.dataset.id);
+      const m = markersById[id];
+      if (m) m.setIcon(icons.amarillo);
+    });
+
+    // Escuchar cambios
+    cont.addEventListener("change", e => {
+      if (!e.target || !e.target.matches(".oferta-checkbox")) return;
+      const id = String(e.target.dataset.id);
+      const m = markersById[id];
+      if (m) m.setIcon(e.target.checked ? icons.amarillo : icons.azul);
+    });
+  }
+
+  // Punto de entrada
+  function init(ofertas, opts = {}) {
+    const layer = opts.layer || global.ofertasLayer;
+    const containerId = opts.containerId || "lista-ofertas";
+    const icons = opts.icons || ICONS;
+
+    if (!layer) {
+      console.error("OfertasChecklist: 'ofertasLayer' no está definido.");
+      return;
+    }
+
+    const markersById = buildMarkersIndex(layer);
+    renderChecklist(ofertas, containerId, markersById, icons);
+
+    // Devuelve referencias por si las quieres reutilizar
+    return { markersById, icons };
+  }
+
+  // Exponer API global
+  global.OfertasChecklist = {
+    init,
+    buildMarkersIndex,
+    renderChecklist,
+    icons: ICONS
+  };
+})(window);

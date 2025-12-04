@@ -8,8 +8,8 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_WEBAPP_NAME: observatorio-inm
-  NODE_VERSION: '18.x'
+  AZURE_WEBAPP_NAME: observatorio-inmobiliario
+  NODE_VERSION: '20.x'
 
 jobs:
   build-and-deploy:
@@ -46,4 +46,4 @@ jobs:
     - name: ✅ Deployment successful
       run: |
         echo "🎉 Deployment completed successfully!"
-        echo "🌐 URL: https://observatorio-inm-hwfzb3dheeavcrdm.brazilsouth-01.azurewebsites.net"
+        echo "🌐 URL: https://observatorio-inmobiliario.azurewebsites.net"

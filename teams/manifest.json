@@ -1,0 +1,58 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.16/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.16",
+  "version": "1.0.0",
+  "id": "{{GENERA-UN-GUID-UNICO}}",
+  "packageName": "com.ingenierialegal.observatorioinmobiliario",
+  "developer": {
+    "name": "Ingeniería Legal SAS",
+    "websiteUrl": "https://{{TU-DOMINIO}}.com",
+    "privacyUrl": "https://{{TU-DOMINIO}}.com/privacy",
+    "termsOfUseUrl": "https://{{TU-DOMINIO}}.com/terms"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "name": {
+    "short": "Observatorio Inmobiliario",
+    "full": "Observatorio Inmobiliario - Ingeniería Legal"
+  },
+  "description": {
+    "short": "Sistema de gestión y visualización de ofertas inmobiliarias",
+    "full": "Observatorio Inmobiliario es una aplicación completa para la gestión, análisis y visualización de ofertas inmobiliarias. Incluye mapas interactivos, filtros avanzados, estadísticas y gestión de normas urbanas."
+  },
+  "accentColor": "#10b981",
+  "configurableTabs": [
+    {
+      "configurationUrl": "https://{{TU-DOMINIO}}.com/config.html",
+      "canUpdateConfiguration": true,
+      "scopes": ["team", "groupchat"]
+    }
+  ],
+  "staticTabs": [
+    {
+      "entityId": "observatorio",
+      "name": "Observatorio",
+      "contentUrl": "https://{{TU-DOMINIO}}.com/index.html",
+      "websiteUrl": "https://{{TU-DOMINIO}}.com",
+      "scopes": ["personal"]
+    }
+  ],
+  "permissions": [
+    "identity",
+    "messageTeamMembers"
+  ],
+  "validDomains": [
+    "{{TU-DOMINIO}}.com",
+    "*.tile.openstreetmap.org",
+    "*.basemaps.cartocdn.com",
+    "server.arcgisonline.com",
+    "unpkg.com",
+    "cdnjs.cloudflare.com"
+  ],
+  "webApplicationInfo": {
+    "id": "{{AZURE-APP-ID}}",
+    "resource": "https://{{TU-DOMINIO}}.com"
+  }
+}
