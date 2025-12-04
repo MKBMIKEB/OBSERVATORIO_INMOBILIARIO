@@ -36,26 +36,14 @@ jobs:
     - name: 🏗️ Build application (si es necesario)
       run: npm run build --if-present
 
-    - name: 📁 Prepare deployment package
-      run: |
-        # Crear archivo ZIP con los archivos necesarios
-        zip -r deploy.zip . \
-          -x "*.git*" \
-          -x "node_modules/*" \
-          -x "*.log" \
-          -x "*.md" \
-          -x ".env*" \
-          -x "uploads/*" \
-          -x "*.ps1"
-
     - name: 🚀 Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
       with:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-        package: deploy.zip
+        package: .
 
     - name: ✅ Deployment successful
       run: |
         echo "🎉 Deployment completed successfully!"
-        echo "🌐 URL: https://observatorio-inm-hwfzb3dheeeavcrdm.brazilsouth-01.azurewebsites.net"
+        echo "🌐 URL: https://observatorio-inm-hwfzb3dheeavcrdm.brazilsouth-01.azurewebsites.net"
