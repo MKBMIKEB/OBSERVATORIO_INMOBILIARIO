@@ -1,0 +1,38 @@
+{
+  "name": "obs_inm",
+  "version": "1.0.0",
+  "description": "Observatorio Inmobiliario con capacidades GIS",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "start:azure": "node server-azure.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon server.js",
+    "deploy": "git push azure master"
+  },
+  "keywords": [
+    "gis",
+    "real-estate",
+    "observatory",
+    "azure",
+    "teams"
+  ],
+  "author": "Ingeniería Legal SAS",
+  "license": "ISC",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "jszip": "^3.10.1",
+    "multer": "^1.4.5-lts.2",
+    "sharp": "^0.34.2",
+    "axios": "^1.6.0",
+    "@azure/storage-blob": "^12.17.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}

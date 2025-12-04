@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test KMZ</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-omnivore@0.3.4/leaflet-omnivore.min.js"></script>
+</head>
+<body>
+    <div id="map" style="height: 500px;"></div>
+
+    <script>
+    const map = L.map('map').setView([4.711, -74.072], 6);
+
+    // Mapa base
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: '© ESRI'
+    }).addTo(map);
+
+    // Cargar KMZ
+    fetch('/api/kmz/banco-agrario')
+        .then(response => response.text())
+        .then(kmlContent => {
+            console.log('KML recibido:', kmlContent.length, 'caracteres');
+
+            const blob = new Blob([kmlContent], { type: 'application/vnd.google-earth.kml+xml' });
+            const kmlUrl = URL.createObjectURL(blob);
+
+            const kmlLayer = omnivore.kml(kmlUrl)
+                .on('ready', function() {
+                    console.log('KML cargado, capas:', this.getLayers().length);
+
+                    this.eachLayer(function(layer) {
+                        console.log('Layer encontrado:', layer.constructor.name);
+                        if (layer.feature && layer.feature.properties) {
+                            console.log('Propiedades:', layer.feature.properties);
+
+                            layer.on('click', function() {
+                                alert('¡Click en polígono funcionó!\\nNombre: ' + (layer.feature.properties.name || 'Sin nombre'));
+                            });
+                        }
+                    });
+                })
+                .on('error', function(e) {
+                    console.error('Error cargando KML:', e);
+                })
+                .addTo(map);
+
+            URL.revokeObjectURL(kmlUrl);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    </script>
+</body>
+</html>

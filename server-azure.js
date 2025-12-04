@@ -6,10 +6,42 @@ const path    = require('path');
 const sharp   = require('sharp');
 const JSZip   = require('jszip');
 
+// Azure Blob Storage (opcional - comentado por defecto)
+// Descomentar y configurar si quieres usar Azure Blob Storage
+/*
+const { BlobServiceClient } = require('@azure/storage-blob');
+const blobServiceClient = BlobServiceClient.fromConnectionString(
+  process.env.AZURE_STORAGE_CONNECTION_STRING
+);
+const containerClient = blobServiceClient.getContainerClient(
+  process.env.AZURE_STORAGE_CONTAINER_NAME || 'observatorio-uploads'
+);
+*/
 
 const app = express();
-app.use(cors());
+
+// Configuración de CORS para Teams
+const corsOptions = {
+  origin: [
+    'https://teams.microsoft.com',
+    'https://*.teams.microsoft.com',
+    'https://*.office.com',
+    'https://*.sharepoint.com',
+    /\.azurewebsites\.net$/
+  ],
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
 app.use(express.json({ limit: '50mb' }));
+
+// Headers adicionales para Teams
+app.use((req, res, next) => {
+  res.setHeader('X-Frame-Options', 'ALLOW-FROM https://teams.microsoft.com');
+  res.setHeader('Content-Security-Policy', "frame-ancestors teams.microsoft.com *.teams.microsoft.com *.skype.com *.office.com");
+  next();
+});
 
 // ─── Carpeta de uploads ──────────────────────────────
 const uploadsDir = path.join(__dirname, 'uploads');
@@ -23,24 +55,33 @@ const storage = multer.diskStorage({
     cb(null, Date.now() + '-' + file.originalname.replace(/\s+/g, '_'))
 });
 const upload = multer({ storage });
+
+// ─── Health check para Azure ─────────────────────────
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
 // ─── Ruta para convertir TIFF a PNG on-the-fly ─────────────────────────
 app.get('/planos/:name.png', async (req, res) => {
   try {
-    const nombre  = req.params.name; // ej. "1749402858155-usos_g"
+    const nombre  = req.params.name;
     const tiffPath = path.join(uploadsDir, nombre + '.tif');
 
-    // Leer y convertir a PNG en memoria
     const pngBuffer = await sharp(tiffPath)
       .png()
       .toBuffer();
 
-    // Devolver como imagen PNG
     res.type('image/png').send(pngBuffer);
   } catch (err) {
     console.error('Error convirtiendo TIFF a PNG:', err);
     res.status(404).send('Plano no encontrado o error al convertir.');
   }
 });
+
 // ─── POST /api/ofertas ───────────────────────────────
 app.post(
   '/api/ofertas',
@@ -176,14 +217,15 @@ app.get('/api/capas-imagen', (req, res) => {
     res.status(500).json({ error: 'Archivo capas.json inválido' });
   }
 });
+
 // ─── POST /api/normas ───────────────────────────────
 const normasFile = path.join(__dirname, 'normas.json');
 
 app.post(
   '/api/normas',
   upload.fields([
-    { name: 'archivo', maxCount: 1 },  // PDF de la norma
-    { name: 'plano', maxCount: 1 }     // Plano georreferenciado (TIFF/KML/etc.)
+    { name: 'archivo', maxCount: 1 },
+    { name: 'plano', maxCount: 1 }
   ]),
   (req, res) => {
     try {
@@ -220,30 +262,25 @@ app.post(
   }
 );
 
-
 // ─── GET /api/normas ────────────────────────────────
 app.get('/api/normas', (req, res) => {
   try {
     if (!fs.existsSync(normasFile)) return res.json([]);
-    
+
     const contenido = fs.readFileSync(normasFile, 'utf-8') || '[]';
     const normas = JSON.parse(contenido);
-    
+
     res.json(normas);
   } catch (err) {
-    console.error('❌ Error al guardar norma:', err.message);
-    console.error(err.stack);
     console.error('❌ Error leyendo normas.json:', err);
     res.status(500).json({ error: 'normas.json inválido' });
   }
 });
 
-// ─── GET /api/kmz/banco-agrario - KML SIN FILTROS ─────────────────────
+// ─── GET /api/kmz/banco-agrario ─────────────────────
 app.get('/api/kmz/banco-agrario', async (req, res) => {
   console.log('🏛️ ===== PETICIÓN BANCO AGRARIO RECIBIDA =====');
   console.log('🏛️ Timestamp:', new Date().toISOString());
-  console.log('🏛️ IP Cliente:', req.ip);
-  console.log('🏛️ User-Agent:', req.get('User-Agent'));
 
   try {
     const kmzPath = path.join(uploadsDir, 'RURALES_BANCO_AGRARIO.kmz');
@@ -254,59 +291,44 @@ app.get('/api/kmz/banco-agrario', async (req, res) => {
       return res.status(404).json({ error: 'Archivo KMZ no encontrado' });
     }
 
-    console.log('✅ Archivo KMZ encontrado, tamaño:', fs.statSync(kmzPath).size, 'bytes');
+    console.log('✅ Archivo KMZ encontrado');
 
-    // Extraer KML directamente del KMZ
-    console.log('📦 Cargando archivo KMZ...');
     const kmzData = fs.readFileSync(kmzPath);
-    console.log('📦 Archivo KMZ cargado en memoria');
-
     const zip = await JSZip.loadAsync(kmzData);
-    console.log('📦 ZIP procesado, archivos encontrados:', Object.keys(zip.files));
 
     const kmlFile = zip.file('doc.kml') || Object.values(zip.files).find(file => file.name.endsWith('.kml'));
 
     if (!kmlFile) {
       console.log('❌ No se encontró archivo KML dentro del KMZ');
-      console.log('❌ Archivos disponibles:', Object.keys(zip.files));
       return res.status(500).json({ error: 'No se encontró archivo KML dentro del KMZ' });
     }
 
-    console.log('✅ Archivo KML encontrado:', kmlFile.name);
-
-    // Obtener contenido KML sin modificaciones
-    console.log('📄 Extrayendo contenido KML...');
     const kmlContent = await kmlFile.async('text');
-    console.log('✅ Contenido KML extraído, tamaño:', kmlContent.length, 'caracteres');
 
     res.set({
       'Content-Type': 'application/vnd.google-earth.kml+xml',
       'Content-Disposition': 'inline; filename="banco_agrario_raw.kml"'
     });
 
-    console.log('📤 Enviando respuesta KML al cliente...');
     res.send(kmlContent);
     console.log('✅ Respuesta KML enviada exitosamente');
-    console.log('🏛️ ===== FIN PETICIÓN BANCO AGRARIO =====\n');
 
   } catch (err) {
     console.error('❌ Error procesando KMZ:', err);
-    console.error('❌ Stack:', err.stack);
     res.status(500).json({ error: 'Error al procesar KMZ' });
   }
 });
 
-
 // ─── GET /api/kmz/info ──────────────────────────────
 app.get('/api/kmz/info', (req, res) => {
   const kmzPath = path.join(uploadsDir, 'RURALES_BANCO_AGRARIO.kmz');
-  
+
   if (!fs.existsSync(kmzPath)) {
     return res.status(404).json({ error: 'Archivo KMZ no encontrado' });
   }
 
   const stats = fs.statSync(kmzPath);
-  
+
   res.json({
     nombre: 'RURALES_BANCO_AGRARIO.kmz',
     tamaño: stats.size,
@@ -316,13 +338,13 @@ app.get('/api/kmz/info', (req, res) => {
   });
 });
 
-
-// ─── Servir archivos estáticos (index.html, etc.) ────
-// (esto debe ir al final)
+// ─── Servir archivos estáticos ────────────────────────
 app.use(express.static(path.join(__dirname)));
 
 // ─── Iniciar servidor ────────────────────────────────
-app.listen(3000, () => {
-  console.log('🚀 Servidor con logs corriendo en http://localhost:3000');
-  console.log('🔍 Logs del Banco Agrario activados - FRONTEND INTEGRADO');
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+  console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
+  console.log(`🌍 Entorno: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`📍 URL: ${process.env.APP_URL || 'http://localhost:' + PORT}`);
 });

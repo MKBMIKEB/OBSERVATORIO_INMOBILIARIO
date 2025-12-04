@@ -1,0 +1,26 @@
+{
+  "name": "observatorio-inmobiliario",
+  "description": "Sistema de observatorio inmobiliario con análisis GIS",
+  "runtime": "node",
+  "node_version": "18.x",
+  "scaling": {
+    "min_instances": 1,
+    "max_instances": 3,
+    "auto_scale": true
+  },
+  "environment": {
+    "NODE_ENV": "production",
+    "PORT": "8080"
+  },
+  "healthCheck": {
+    "path": "/api/ofertas",
+    "interval": 60
+  },
+  "cors": {
+    "allowedOrigins": [
+      "https://teams.microsoft.com",
+      "https://*.teams.microsoft.com",
+      "https://*.office.com"
+    ]
+  }
+}

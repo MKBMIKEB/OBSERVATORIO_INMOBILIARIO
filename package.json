@@ -1,19 +1,26 @@
 {
   "name": "obs_inm",
   "version": "1.0.0",
-  "description": "",
+  "description": "Observatorio Inmobiliario con análisis GIS",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "echo \"No tests specified\" && exit 0"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["gis", "real-estate", "observatory"],
+  "author": "Ingeniería Legal SAS",
   "license": "ISC",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^5.1.0",
+    "jszip": "^3.10.1",
     "multer": "^1.4.5-lts.2",
-    "sharp": "^0.34.2"
+    "sharp": "^0.34.2",
+    "axios": "^1.6.0"
   }
 }
