@@ -322,7 +322,9 @@ app.get('/api/kmz/info', (req, res) => {
 app.use(express.static(path.join(__dirname)));
 
 // ─── Iniciar servidor ────────────────────────────────
-app.listen(3000, () => {
-  console.log('🚀 Servidor con logs corriendo en http://localhost:3000');
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
+  console.log(`🌍 Entorno: ${process.env.NODE_ENV || 'development'}`);
   console.log('🔍 Logs del Banco Agrario activados - FRONTEND INTEGRADO');
 });
