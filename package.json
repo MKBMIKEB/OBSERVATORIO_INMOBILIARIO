@@ -4,7 +4,8 @@
   "description": "Observatorio Inmobiliario con análisis GIS",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "node server-simple.js",
+    "start:full": "node server.js",
     "dev": "node server.js",
     "test": "echo \"No tests specified\" && exit 0"
   },
